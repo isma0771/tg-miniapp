@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>IsmaBoost</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0a0012; 
+            --text-color: #ffffff;
+            --hint-color: #8e8e93;
+            --button-color: #b829ff; 
+            --button-text-color: #ffffff;
+            --secondary-bg: rgba(255, 255, 255, 0.04); 
+            --accent: #d68bff;
+            --list-bg: #1c1c1e;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', Roboto, sans-serif;
+            background: linear-gradient(145deg, #1b0033 0%, #0a0012 50%, #000000 100%);
+            background-attachment: fixed;
+            color: var(--text-color);
+            margin: 0; padding: 0 0 85px 0; 
+            box-sizing: border-box;
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* ВОДЯНОЙ ЗНАК */
+        .watermark { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-15deg); font-size: 14vw; font-weight: 900; color: rgba(255, 255, 255, 0.02); z-index: -1; pointer-events: none; letter-spacing: 5px; text-transform: uppercase; }
+
+        /* ПЛАВНЫЕ АНИМАЦИИ */
+        .container { display: none; opacity: 0; animation: smoothSlideUp 0.4s cubic-bezier(0.1, 0.8, 0.2, 1) forwards; padding: 20px; }
+        .container.active { display: block; }
+        @keyframes smoothSlideUp { from { opacity: 0; transform: translateY(15px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
+        /* ШАПКА И БАЛАНС */
+        .header { display: flex; align-items: center; gap: 15px; margin-bottom: 25px; }
+        .avatar { width: 55px; height: 55px; background: linear-gradient(135deg, #b829ff 0%, #4a00e0 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: bold; color: #fff; box-shadow: 0 4px 15px rgba(184, 41, 255, 0.3);}
+        .user-info h1 { margin: 0; font-size: 18px; font-weight: 700; }
+        .user-info p { margin: 3px 0 0; color: var(--hint-color); font-size: 13px; }
+
+        .balance-card { background: linear-gradient(135deg, rgba(138,43,226,0.6) 0%, rgba(74,0,224,0.6) 100%); backdrop-filter: blur(20px); border-radius: 20px; padding: 22px; color: white; margin-bottom: 25px; box-shadow: 0 10px 30px rgba(74,0,224,0.3); border: 1px solid rgba(255,255,255,0.08); position: relative; overflow: hidden; }
+        .balance-card::after { content: '💎'; position: absolute; right: -15px; top: -15px; font-size: 90px; opacity: 0.15; transform: rotate(15deg); }
+        .balance-card p { margin: 0; font-size: 14px; opacity: 0.85; }
+        .balance-card h2 { margin: 8px 0 20px; font-size: 34px; font-weight: 800; letter-spacing: 0.5px;}
+        .btn-glass { background: rgba(255,255,255,0.15); border: none; color: white; padding: 12px; border-radius: 12px; font-weight: bold; backdrop-filter: blur(10px); width: 100%; font-size: 15px; transition: 0.2s; }
+        .btn-glass:active { background: rgba(255,255,255,0.25); transform: scale(0.97); }
+
+        /* КАРТОЧКИ И ПОЛЯ */
+        .card { background-color: var(--secondary-bg); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.05); border-radius: 20px; padding: 18px; margin-bottom: 15px; }
+        label { font-size: 13px; color: var(--hint-color); display: block; margin-bottom: 8px; margin-left: 5px;}
+        input[type="text"], input[type="password"] { width: 100%; padding: 15px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.08); background: rgba(0,0,0,0.4); color: var(--text-color); margin-bottom: 15px; font-size: 15px; box-sizing: border-box; transition: 0.2s; }
+        input[type="text"]:focus, input[type="password"]:focus { outline: none; border-color: var(--accent); background: rgba(0,0,0,0.6); }
+
+        /* НОВЫЙ ДИЗАЙН СПИСКА (КАК НА СКРИНШОТЕ) */
+        .radio-list { background: rgba(28, 28, 30, 0.6); border-radius: 16px; border: 1px solid rgba(255,255,255,0.05); overflow: hidden; margin-bottom: 20px; }
+        .radio-item { display: flex; justify-content: space-between; align-items: center; padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; transition: background 0.2s; }
+        .radio-item:last-child { border-bottom: none; }
+        .radio-item:active { background: rgba(255,255,255,0.1); }
+        .radio-text { font-size: 15px; color: #e5e5ea; font-weight: 500; }
+        .radio-circle { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--hint-color); position: relative; transition: 0.2s; box-sizing: border-box;}
+        .radio-item.active .radio-circle { border-color: var(--accent); }
+        .radio-item.active .radio-circle::after { content: ''; width: 12px; height: 12px; background: var(--accent); border-radius: 50%; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); box-shadow: 0 0 8px var(--accent); }
+
+        /* СЛАЙДЕР И КНОПКА */
+        .slider-container { margin: 20px 0; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 16px; }
+        .slider-labels { display: flex; justify-content: space-between; margin-bottom: 15px; font-weight: bold; font-size: 16px; color: var(--text-color); }
+        .slider-labels span:last-child { color: var(--accent); font-size: 18px; }
+        input[type="range"] { width: 100%; accent-color: var(--button-color); height: 6px; border-radius: 3px; outline: none; }
+        
+        .price-total { text-align: center; font-size: 28px; font-weight: 800; margin: 20px 0; color: #fff; text-shadow: 0 0 15px rgba(214, 139, 255, 0.4); }
+        .main-btn { background: linear-gradient(135deg, #b829ff 0%, #6f00ff 100%); color: #fff; border: none; padding: 16px; border-radius: 14px; width: 100%; font-size: 16px; font-weight: bold; cursor: pointer; box-shadow: 0 6px 20px rgba(138, 43, 226, 0.4); text-transform: uppercase; letter-spacing: 1px; transition: 0.2s;}
+        .main-btn:active { transform: scale(0.96); box-shadow: 0 2px 10px rgba(138, 43, 226, 0.3); }
+
+        /* ЗАГОЛОВОК СТРАНИЦЫ */
+        .page-header { display: flex; align-items: center; margin-bottom: 20px; font-size: 20px; font-weight: bold; color: var(--hint-color); }
+        .back-btn { background: none; border: none; color: var(--button-color); font-size: 22px; margin-right: 15px; cursor: pointer; padding: 5px; transition: 0.2s;}
+        .back-btn:active { transform: translateX(-5px); opacity: 0.7; }
+        .page-header span { color: #fff; }
+
+        /* СЕТКИ */
+        .grid-cats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+        .cat-card { background: rgba(28, 28, 30, 0.6); backdrop-filter: blur(10px); border-radius: 18px; padding: 20px 10px; text-align: center; border: 1px solid rgba(255,255,255,0.05); cursor: pointer; transition: 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+        .cat-card:active { transform: scale(0.94); background: rgba(255,255,255,0.08); }
+        .cat-card i { font-size: 32px; margin-bottom: 12px; color: var(--accent); filter: drop-shadow(0 0 8px rgba(184,41,255,0.3));}
+        .cat-title { font-weight: 600; font-size: 14px; color: #fff;}
+
+        /* НИЖНЕЕ МЕНЮ */
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(10,0,18,0.85); backdrop-filter: blur(20px); border-top: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-around; padding: 12px 0; padding-bottom: calc(12px + env(safe-area-inset-bottom)); z-index: 100;}
+        .nav-item { display: flex; flex-direction: column; align-items: center; color: #636366; font-size: 11px; font-weight: 600; gap: 5px; background: none; border: none; transition: 0.3s cubic-bezier(0.1, 0.8, 0.2, 1);}
+        .nav-item i { font-size: 22px; transition: 0.3s; }
+        .nav-item.active { color: #d68bff; }
+        .nav-item.active i { transform: translateY(-3px); filter: drop-shadow(0 2px 5px rgba(214,139,255,0.4)); }
+
+        .box-icon { font-size: 100px; text-align:center; margin: 20px 0; filter: drop-shadow(0 0 30px rgba(184, 41, 255, 0.6)); }
+        .shake { animation: shake 0.5s infinite; }
+        @keyframes shake { 0% { transform: rotate(0deg); } 25% { transform: rotate(-10deg); } 50% { transform: rotate(0deg); } 75% { transform: rotate(10deg); } 100% { transform: rotate(0deg); } }
+    </style>
+</head>
+<body>
+    <div class="watermark">ISMABOOST</div>
+
+    <!-- Вкладка: ГЛАВНАЯ -->
+    <div id="tab-home" class="container active">
+        <div class="header">
+            <div class="avatar" id="avatar">I</div>
+            <div class="user-info">
+                <h1 id="username">Загрузка...</h1>
+                <p>ID: <span id="userid">...</span></p>
+            </div>
+        </div>
+        <div class="balance-card">
+            <p>Ваш баланс</p>
+            <h2>IsmaBoost</h2>
+            <button class="btn-glass" onclick="closeAndCommand('/balance')"><i class="fas fa-wallet"></i> Пополнить баланс</button>
+        </div>
+        <div class="card" style="text-align: center; border-radius: 20px; border:none; background: linear-gradient(135deg, rgba(28,28,30,0.8), rgba(0,0,0,0.4));">
+            <i class="fas fa-rocket" style="font-size: 45px; color: var(--accent); margin-bottom: 15px; filter: drop-shadow(0 0 10px rgba(214,139,255,0.4));"></i>
+            <h3 style="margin:0 0 5px 0;">Автоматическая накрутка</h3>
+            <p style="color: var(--hint-color); font-size: 14px; line-height: 1.4; margin:0;">Свыше 70 услуг по лучшим ценам. Используйте нижнее меню.</p>
+        </div>
+    </div>
+
+    <!-- Вкладка: НАКРУТКА -->
+    <div id="tab-social" class="container">
+        <div class="page-header" style="margin-bottom: 15px; border:none;"><span style="color:#fff; font-size:24px;">Платформы</span></div>
+        <div class="grid-cats" id="social-platforms-grid"></div>
+    </div>
+
+    <!-- ЭКРАН: Заказ Накрутки -->
+    <div id="screen-social-order" class="container">
+        <div class="page-header">
+            <button class="back-btn" onclick="goBack('social')"><i class="fas fa-chevron-left"></i></button>
+            <span id="social-platform-title">Telegram</span>
+        </div>
+        <div class="card" style="padding: 0; background: none; border: none; backdrop-filter: none;">
+            <label style="margin-left: 15px;">Выберите пакет:</label>
+            <div id="social-list-container"></div> 
+
+            <label style="margin-left: 15px; margin-top: 5px;">Ссылка (пост/канал/видео):</label>
+            <input type="text" id="social-link" placeholder="Вставьте ссылку...">
+
+            <div class="slider-container">
+                <div class="slider-labels">
+                    <span>Количество:</span>
+                    <span id="social-qty-val">1000</span>
+                </div>
+                <input type="range" id="social-qty" min="100" max="10000" step="100" value="1000" oninput="updateSocialCalc()">
+            </div>
+
+            <div class="price-total" id="social-total-price">0.00 ₽</div>
+            <button class="main-btn" onclick="sendSocialOrder()">ОФОРМИТЬ ЗАКАЗ</button>
+        </div>
+    </div>
+
+    <!-- Вкладка: ИГРЫ И ДОНАТ -->
+    <div id="tab-games" class="container">
+        <div class="page-header" style="margin-bottom: 15px; border:none;"><span style="color:#fff; font-size:24px;">Игры и Донат</span></div>
+        <div class="grid-cats">
+            <div class="cat-card" onclick="openGame('pubg')"><i class="fas fa-crosshairs" style="color:#ff9f43"></i><div class="cat-title">PUBG UC</div></div>
+            <div class="cat-card" onclick="openGame('brawl')"><i class="fas fa-star" style="color:#feca57"></i><div class="cat-title">Brawl Stars</div></div>
+            <div class="cat-card" onclick="openGame('roblox')"><i class="fas fa-cube" style="color:#1dd1a1"></i><div class="cat-title">Roblox</div></div>
+            <div class="cat-card" onclick="openGame('br')"><i class="fas fa-car" style="color:#ff6b6b"></i><div class="cat-title">Black Russia</div></div>
+            <div class="cat-card" onclick="openGame('pubg_carry')"><i class="fas fa-medal" style="color:#feca57"></i><div class="cat-title">PUBG Сопровод</div></div>
+            <div class="cat-card" onclick="openGame('metro')"><i class="fas fa-radiation" style="color:#ff9f43"></i><div class="cat-title">Metro Сопровод</div></div>
+            <div class="cat-card" onclick="openGame('cp')"><i class="fas fa-parking" style="color:#54a0ff"></i><div class="cat-title">Car Parking 2</div></div>
+            <div class="cat-card" onclick="openGame('standoff')"><i class="fas fa-coins" style="color:#feca57"></i><div class="cat-title">Голда Standoff</div></div>
+        </div>
+    </div>
+
+    <!-- ЭКРАН: Заказ Игры -->
+    <div id="screen-game-order" class="container">
+        <div class="page-header">
+            <button class="back-btn" onclick="goBack('games')"><i class="fas fa-chevron-left"></i></button>
+            <span id="game-title">Игра</span>
+        </div>
+        <div class="card" id="game-form-container" style="padding: 0; background: none; border: none; backdrop-filter: none;"></div>
+    </div>
+
+    <!-- Вкладка: КОРОБКА -->
+    <div id="tab-box" class="container">
+        <div class="card" style="text-align: center; padding: 40px 20px; background: rgba(28,28,30,0.7); border: 1px solid rgba(255,255,255,0.05); border-radius: 20px;">
+            <h2 style="margin-top: 0; font-size: 26px;">🎁 Слепая коробка</h2>
+            <p style="color: var(--hint-color); font-size: 15px; margin-bottom: 30px;">Шанс выиграть 1000 подписчиков или 100 звёзд! Стоимость: 150 ₽</p>
+            <div class="box-icon" id="box-emoji">🎁</div>
+            <button class="main-btn" id="box-btn" style="background: linear-gradient(135deg, #FF512F 0%, #DD2476 100%); margin-top:20px;" onclick="openBox()">КРУТИТЬ ЗА 150 ₽</button>
+        </div>
+    </div>
+
+    <!-- Нижнее меню навигации -->
+    <div class="bottom-nav">
+        <button class="nav-item active" onclick="switchMainTab('home', this)"><i class="fas fa-home"></i> Главная</button>
+        <button class="nav-item" onclick="switchMainTab('social', this)"><i class="fas fa-thumbs-up"></i> Накрутка</button>
+        <button class="nav-item" onclick="switchMainTab('games', this)"><i class="fas fa-gamepad"></i> Игры</button>
+        <button class="nav-item" onclick="switchMainTab('box', this)"><i class="fas fa-box"></i> Лутбокс</button>
+    </div>
+    <script>
+        let tg = window.Telegram.WebApp;
+        tg.expand(); tg.ready();
+
+        if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+            let u = tg.initDataUnsafe.user;
+            document.getElementById('username').innerText = u.first_name;
+            document.getElementById('avatar').innerText = u.first_name.charAt(0).toUpperCase();
+            document.getElementById('userid').innerText = u.id;
+        }
+
+        const SOCIAL_DATA = {
+            telegram: { title: "Telegram", icon: "fab fa-telegram-plane", color: "#0088cc", items: [
+                {id: "tg_stars", name: "🌟 Звёзды", price: 205, pack: 100, min: 100, max: 10000, step: 100},
+                {id: "tg_subs", name: "👥 Подписчики", price: 114.99, pack: 1000, min: 100, max: 20000, step: 100},
+                {id: "tg_views", name: "👀 Просмотры", price: 14.99, pack: 1000, min: 100, max: 100000, step: 100},
+                {id: "tg_bot_start", name: "🤖 Запуск бота", price: 24.99, pack: 1000, min: 100, max: 50000, step: 100},
+                {id: "tg_react_pos", name: "👍 Реакции (Позитив)", price: 15.70, pack: 1000, min: 100, max: 10000, step: 100},
+                {id: "tg_react_neg", name: "👎 Реакции (Негатив)", price: 15.70, pack: 1000, min: 100, max: 10000, step: 100},
+                {id: "tg_report_user_fraud", name: "🚨 Жалобы", price: 420, pack: 1000, min: 1000, max: 10000, step: 1000}
+            ]},
+            tiktok: { title: "TikTok", icon: "fab fa-tiktok", color: "#ff0050", items: [
+                {id: "tt_views", name: "👀 Просмотры", price: 24.99, pack: 1000, min: 1000, max: 100000, step: 1000},
+                {id: "tt_likes_twiboost", name: "❤️ Лайки", price: 379.99, pack: 1000, min: 100, max: 20000, step: 100},
+                {id: "tt_subs", name: "👥 Подписчики", price: 651, pack: 1000, min: 100, max: 10000, step: 100},
+                {id: "tt_saves", name: "💾 Сохранения", price: 14.99, pack: 1000, min: 100, max: 20000, step: 100},
+                {id: "tt_reposts", name: "🔁 Репосты", price: 45.93, pack: 1000, min: 100, max: 20000, step: 100}
+            ]},
+            instagram: { title: "Instagram", icon: "fab fa-instagram", color: "#e84393", items: [
+                {id: "ig_likes", name: "❤️ Лайки", price: 89, pack: 1000, min: 100, max: 20000, step: 100},
+                {id: "ig_views", name: "👁 Просмотры", price: 19.99, pack: 1000, min: 1000, max: 100000, step: 1000},
+                {id: "ig_subs", name: "👥 Подписчики", price: 437, pack: 1000, min: 100, max: 10000, step: 100},
+                {id: "ig_reach", name: "📊 Охват", price: 13, pack: 1000, min: 100, max: 20000, step: 100},
+                {id: "ig_saves", name: "💾 Сохранения", price: 8, pack: 1000, min: 100, max: 10000, step: 100},
+                {id: "ig_reposts", name: "🔄 Репосты", price: 4, pack: 1000, min: 100, max: 10000, step: 100}
+            ]},
+            youtube: { title: "YouTube", icon: "fab fa-youtube", color: "#ff0000", items: [
+                {id: "yt_views", name: "👀 Просмотры", price: 164, pack: 1000, min: 1000, max: 50000, step: 1000},
+                {id: "yt_likes", name: "❤️ Лайки", price: 529, pack: 1000, min: 100, max: 10000, step: 100},
+                {id: "yt_subs", name: "👥 Подписчики", price: 3502, pack: 1000, min: 100, max: 5000, step: 100}
+            ]},
+            vk: { title: "ВКонтакте", icon: "fab fa-vk", color: "#0077ff", items: [
+                {id: "vk_views", name: "👀 Просмотры", price: 1, pack: 1000, min: 1000, max: 100000, step: 1000},
+                {id: "vk_likes", name: "❤️ Лайки", price: 38, pack: 1000, min: 100, max: 10000, step: 100},
+                {id: "vk_subs", name: "👥 Подписчики", price: 63, pack: 1000, min: 100, max: 10000, step: 100},
+                {id: "vk_reposts", name: "🔁 Репосты", price: 221, pack: 1000, min: 100, max: 10000, step: 100}
+            ]},
+            twitch: { title: "Twitch", icon: "fab fa-twitch", color: "#9146ff", items: [
+                {id: "tw_views", name: "👀 Просмотры", price: 25, pack: 1000, min: 1000, max: 50000, step: 1000},
+                {id: "tw_subs", name: "👥 Подписчики", price: 21, pack: 1000, min: 100, max: 10000, step: 100},
+                {id: "tw_viewers", name: "👥 Зрители", price: 60, pack: 1000, min: 100, max: 10000, step: 100}
+            ]},
+            twitter: { title: "Twitter", icon: "fab fa-twitter", color: "#1da1f2", items: [
+                {id: "twt_views", name: "👀 Просмотры", price: 3, pack: 1000, min: 1000, max: 50000, step: 1000},
+                {id: "twt_likes", name: "❤️ Лайки", price: 561, pack: 1000, min: 100, max: 5000, step: 100},
+                {id: "twt_subs", name: "👥 Подписчики", price: 211, pack: 1000, min: 100, max: 5000, step: 100}
+            ]},
+            likee: { title: "Likee", icon: "fas fa-heart", color: "#ff4757", items: [
+                {id: "lk_subs", name: "👥 Подписчики", price: 512, pack: 1000, min: 100, max: 10000, step: 100},
+                {id: "lk_likes", name: "❤️ Лайки", price: 258, pack: 1000, min: 100, max: 10000, step: 100}
+            ]},
+            facebook: { title: "Facebook", icon: "fab fa-facebook", color: "#1877f2", items: [
+                {id: "fb_subs", name: "👥 Подписчики", price: 70, pack: 1000, min: 100, max: 10000, step: 100}
+            ]},
+            rutube: { title: "Rutube", icon: "fas fa-play", color: "#2ed573", items: [
+                {id: "rt_views1", name: "👀 Просмотры (РФ)", price: 94, pack: 1000, min: 1000, max: 50000, step: 1000},
+                {id: "rt_views2", name: "👀 Просмотры (Быстрые)", price: 24, pack: 1000, min: 1000, max: 50000, step: 1000},
+                {id: "rt_emojis", name: "😍 Эмоции", price: 211, pack: 1000, min: 100, max: 5000, step: 100},
+                {id: "rt_likes", name: "❤️ Лайки", price: 702, pack: 1000, min: 100, max: 5000, step: 100}
+            ]},
+            max: { title: "MAX", icon: "fas fa-cube", color: "#54a0ff", items: [
+                {id: "mx_subs", name: "👥 Подписчики", price: 3395, pack: 1000, min: 100, max: 5000, step: 100},
+                {id: "mx_views", name: "👀 Просмотры", price: 1423, pack: 1000, min: 1000, max: 50000, step: 1000},
+                {id: "mx_reposts", name: "🔁 Репосты", price: 525, pack: 1000, min: 100, max: 5000, step: 100},
+                {id: "mx_bot_start", name: "🤖 Запуск бота", price: 3987, pack: 1000, min: 100, max: 5000, step: 100}
+            ]}
+        };
+
+        const GAMES_DATA = {
+            pubg: { title: "PUBG Mobile", type: "options", inputs: [{id: "g_id", label: "ID игрока"}], options: [ {n: "60 UC", p: 112}, {n: "325 UC", p: 478}, {n: "660 UC", p: 929}, {n: "985 UC", p: 1500}, {n: "1320 UC", p: 1975}, {n: "1800 UC", p: 2411}, {n: "2460 UC", p: 3398}, {n: "2850 UC", p: 1722} ]},
+            brawl: { title: "Brawl Stars", type: "options", inputs: [{id: "g_id", label: "Supercell ID (Почта)"}], options: [ {n: "Black Pass", p: 1194}, {n: "Brawl Pass Plus", p: 1574}, {n: "Pro Pass", p: 3106} ]},
+            roblox: { title: "Roblox (Robux)", type: "options", inputs: [{id: "g_log", label: "Логин"}, {id: "g_pass", label: "Пароль (Отключите 2FA)"}], options: [ {n: "80 Robux (РФ)", p: 127}, {n: "500 Robux (РФ)", p: 763}, {n: "600 Robux (РФ)", p: 912}, {n: "800 Robux (РФ)", p: 1015}, {n: "1000 Robux (США)", p: 1148}, {n: "1500 Robux (США)", p: 1489}, {n: "1200 Robux (РФ)", p: 1772}, {n: "1500 Robux (РФ)", p: 1899} ]},
+            br: { title: "Black Russia (Коины)", type: "slider", min: 10, max: 5000, step: 10, ppu: 1.50, inputs: [{id: "g_serv", label: "Сервер"}, {id: "g_nick", label: "Никнейм"}] },
+            cp: { title: "Car Parking 2 (Аккаунты)", type: "slider_special", min: 1, max: 31, step: 1, inputs: [] },
+            pubg_carry: { title: "PUBG Сопровождение", type: "fixed", price: 249, desc: "GOLD СОПРОВОЖДЕНИЕ | ELITE 8\nГарантия выноса: от 9кк до 15кк." },
+            metro: { title: "Metro Сопровождение", type: "fixed", price: 149, desc: "СОПРОВОД — 12 ЛЯМ РАДИКА\nБыстро • Чётко • Без лишнего." },
+            standoff: { title: "Голда Standoff", type: "info", desc: "СКУПКА ГОЛДЫ\nКурс — 0.45 ₽ за 1 голду.\nБез комиссии. Моментальная оплата.\nЛюбые объемы.", btn: "Написать оператору" }
+        };
+
+        let socGrid = document.getElementById('social-platforms-grid');
+        for (let key in SOCIAL_DATA) {
+            let p = SOCIAL_DATA[key];
+            socGrid.innerHTML += `<div class="cat-card" onclick="openSocialPlatform('${key}')"><i class="${p.icon}" style="color:${p.color}"></i><div class="cat-title">${p.title}</div></div>`;
+        }
+
+        let currentPlat = ""; let currentSocialIndex = 0;
+        let currentGame = ""; let currentGameIndex = 0;
+
+        function switchMainTab(tabId, el) {
+            document.querySelectorAll('.container').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById('tab-' + tabId).classList.add('active');
+            el.classList.add('active');
+        }
+        function goBack(tabId) {
+            document.querySelectorAll('.container').forEach(c => c.classList.remove('active'));
+            document.getElementById('tab-' + tabId).classList.add('active');
+        }
+
+        function openSocialPlatform(platKey) {
+            currentPlat = platKey; currentSocialIndex = 0;
+            let p = SOCIAL_DATA[platKey];
+            document.getElementById('social-platform-title').innerText = p.title;
+            
+            let html = '<label style="margin-left: 15px;">Выберите пакет:</label><div class="radio-list" id="social-radio-list">';
+            p.items.forEach((it, i) => {
+                let active = i === 0 ? 'active' : '';
+                html += `
+                <div class="radio-item ${active}" id="social-radio-${i}" onclick="selectSocialService(${i})">
+                    <div class="radio-text">${it.name} (${it.price}₽ / ${it.pack}шт)</div>
+                    <div class="radio-circle"></div>
+                </div>`;
+            });
+            html += '</div>';
+            
+            document.getElementById('social-list-container').innerHTML = html;
+            document.querySelectorAll('.container').forEach(c => c.classList.remove('active'));
+            document.getElementById('screen-social-order').classList.add('active');
+            updateSocialCalc();
+        }
+
+        function selectSocialService(index) {
+            currentSocialIndex = index;
+            document.querySelectorAll('#social-radio-list .radio-item').forEach(el => el.classList.remove('active'));
+            document.getElementById('social-radio-' + index).classList.add('active');
+            updateSocialCalc();
+        }
+
+        function updateSocialCalc() {
+            let item = SOCIAL_DATA[currentPlat].items[currentSocialIndex];
+            let slider = document.getElementById('social-qty');
+            slider.min = item.min; slider.max = item.max; slider.step = item.step;
+            if(parseInt(slider.value) < item.min) slider.value = item.min;
+            if(parseInt(slider.value) > item.max) slider.value = item.max;
+            document.getElementById('social-qty-val').innerText = slider.value;
+            let total = (item.price / item.pack) * slider.value;
+            document.getElementById('social-total-price').innerText = total.toFixed(2) + ' ₽';
+        }
+
+        function sendSocialOrder() {
+            let item = SOCIAL_DATA[currentPlat].items[currentSocialIndex];
+            let link = document.getElementById('social-link').value;
+            let qty = document.getElementById('social-qty').value;
+            if (link.length < 3) { tg.showAlert("Введите ссылку!"); return; }
+            tg.sendData(JSON.stringify({ action: "order", service: item.id, link: link, qty: qty }));
+            tg.close();
+        }
+
+        function openGame(gameKey) {
+            currentGame = gameKey; currentGameIndex = 0;
+            let g = GAMES_DATA[gameKey];
+            document.getElementById('game-title').innerText = g.title;
+            let cont = document.getElementById('game-form-container');
+            let html = "";
+
+            if (g.type === "options") {
+                html += `<label style="margin-left:15px;">Выберите пакет:</label><div class="radio-list" id="game-radio-list">`;
+                g.options.forEach((o, i) => {
+                    let active = i === 0 ? 'active' : '';
+                    html += `
+                    <div class="radio-item ${active}" id="game-radio-${i}" onclick="selectGameOption(${i})">
+                        <div class="radio-text">${o.n}</div>
+                        <div class="radio-circle"></div>
+                    </div>`;
+                });
+                html += `</div>`;
+                g.inputs.forEach(inp => { html += `<label style="margin-left:15px;">${inp.label}:</label><input type="${inp.id==='g_pass'?'password':'text'}" id="${inp.id}">`; });
+                html += `<div class="price-total" id="g-total">${g.options[0].p.toFixed(2)} ₽</div>`;
+                html += `<button class="main-btn" onclick="sendGameOrder()">ОПЛАТИТЬ</button>`;
+            } 
+            else if (g.type === "slider") {
+                g.inputs.forEach(inp => { html += `<label style="margin-left:15px;">${inp.label}:</label><input type="text" id="${inp.id}">`; });
+                html += `<div class="slider-container"><div class="slider-labels"><span>Количество:</span><span id="g-qty-val">${g.min}</span></div>`;
+                html += `<input type="range" id="g-slider" min="${g.min}" max="${g.max}" step="${g.step}" value="${g.min}" oninput="updateGameCalc()"></div>`;
+                html += `<div class="price-total" id="g-total">${(g.min * g.ppu).toFixed(2)} ₽</div>`;
+                html += `<button class="main-btn" onclick="sendGameOrder()">ОПЛАТИТЬ</button>`;
+            }
+            else if (g.type === "slider_special") {
+                html += `<div class="slider-container"><div class="slider-labels"><span>Аккаунтов:</span><span id="g-qty-val">${g.min}</span></div>`;
+                html += `<input type="range" id="g-slider" min="${g.min}" max="${g.max}" step="${g.step}" value="${g.min}" oninput="updateGameCalc()"></div>`;
+                html += `<p style="font-size:12px; color:gray; text-align:center;">До 3 шт - 50₽/шт, далее 25₽/шт</p>`;
+                html += `<div class="price-total" id="g-total">50.00 ₽</div>`;
+                html += `<button class="main-btn" onclick="sendGameOrder()">ОПЛАТИТЬ</button>`;
+            }
+            else if (g.type === "fixed") {
+                html += `<div style="background:rgba(0,0,0,0.3); padding:15px; border-radius:16px; margin-bottom:20px; white-space: pre-line; line-height:1.5;">${g.desc}</div>`;
+                html += `<div class="price-total">${g.price.toFixed(2)} ₽</div>`;
+                html += `<button class="main-btn" onclick="sendGameOrder()">ОПЛАТИТЬ</button>`;
+            }
+            else if (g.type === "info") {
+                html += `<div style="background:rgba(0,0,0,0.3); padding:15px; border-radius:16px; margin-bottom:20px; white-space: pre-line; line-height:1.5; text-align:center;">${g.desc}</div>`;
+                html += `<button class="main-btn" onclick="tg.openTelegramLink('https://t.me/ismaboy014')">${g.btn}</button>`;
+            }
+
+            cont.innerHTML = html;
+            document.querySelectorAll('.container').forEach(c => c.classList.remove('active'));
+            document.getElementById('screen-game-order').classList.add('active');
+        }
+
+        function selectGameOption(index) {
+            currentGameIndex = index;
+            document.querySelectorAll('#game-radio-list .radio-item').forEach(el => el.classList.remove('active'));
+            document.getElementById('game-radio-' + index).classList.add('active');
+            updateGameCalc();
+        }
+
+        function updateGameCalc() {
+            let g = GAMES_DATA[currentGame];
+            if (g.type === "options") {
+                document.getElementById('g-total').innerText = g.options[currentGameIndex].p.toFixed(2) + ' ₽';
+            } else if (g.type === "slider") {
+                let v = document.getElementById('g-slider').value;
+                document.getElementById('g-qty-val').innerText = v;
+                document.getElementById('g-total').innerText = (v * g.ppu).toFixed(2) + ' ₽';
+            } else if (g.type === "slider_special") {
+                let v = parseInt(document.getElementById('g-slider').value);
+                document.getElementById('g-qty-val').innerText = v;
+                let price = (v <= 3) ? (v * 50) : (3 * 50 + (v - 3) * 25);
+                document.getElementById('g-total').innerText = price.toFixed(2) + ' ₽';
+            }
+        }
+
+        function sendGameOrder() {
+            let g = GAMES_DATA[currentGame];
+            let payload = { action: "order_game", game_id: currentGame, inputs: {} };
+            
+            if (g.type === "options") {
+                payload.item_name = g.options[currentGameIndex].n;
+                payload.price = g.options[currentGameIndex].p;
+                for (let inp of g.inputs) {
+                    let val = document.getElementById(inp.id).value;
+                    if (val.length < 2) { tg.showAlert(`Заполните: ${inp.label}`); return; }
+                    payload.inputs[inp.label] = val;
+                }
+            } else if (g.type === "slider") {
+                let v = document.getElementById('g-slider').value;
+                payload.item_name = `${g.title} (${v} шт.)`;
+                payload.price = v * g.ppu;
+                for (let inp of g.inputs) {
+                    let val = document.getElementById(inp.id).value;
+                    if (val.length < 1) { tg.showAlert(`Заполните: ${inp.label}`); return; }
+                    payload.inputs[inp.label] = val;
+                }
+            } else if (g.type === "slider_special") {
+                let v = parseInt(document.getElementById('g-slider').value);
+                payload.item_name = `${g.title} (${v} шт.)`;
+                payload.price = (v <= 3) ? (v * 50) : (3 * 50 + (v - 3) * 25);
+            } else if (g.type === "fixed") {
+                payload.item_name = g.title;
+                payload.price = g.price;
+            }
+
+            tg.sendData(JSON.stringify(payload));
+            tg.close();
+        }
+
+        function openBox() {
+            let icon = document.getElementById('box-emoji'); let btn = document.getElementById('box-btn');
+            icon.classList.add('shake'); btn.innerText = "ОТКРЫВАЕМ..."; btn.disabled = true;
+            setTimeout(() => { icon.classList.remove('shake'); icon.innerText = "✨"; tg.sendData(JSON.stringify({action: "blindbox"})); tg.close(); }, 1500);
+        }
+
+        function closeAndCommand(cmd) { tg.sendData(JSON.stringify({action: "command", text: cmd})); tg.close(); }
+    </script>
+</body>
+</html>
