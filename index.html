@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>IsmaBoost</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0014; --bg2: #12001f; --card: #1a0a2e; --card2: #241040;
+            --text: #ffffff; --hint: #9b7fb8; --accent: #b829ff; --accent2: #7b1fa2;
+            --glow: rgba(184, 41, 255, 0.35); --border: rgba(184, 41, 255, 0.2);
+        }
+        * { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(180deg, #0a0014 0%, #12001f 100%);
+            color: var(--text); margin: 0; padding: 0 0 100px 0;
+            overflow-x: hidden; -webkit-tap-highlight-color: transparent; min-height: 100vh;
+        }
+        .container { display: none; padding: 15px; animation: fadeIn 0.3s; }
+        .container.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .app-header { text-align: center; padding: 18px 15px 12px; background: linear-gradient(180deg, rgba(184,41,255,0.15) 0%, transparent 100%); border-bottom: 1px solid var(--border); margin-bottom: 15px; }
+        .app-logo { font-size: 26px; font-weight: 900; letter-spacing: 2px; background: linear-gradient(90deg, #b829ff, #ff66cc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; text-shadow: 0 0 30px var(--glow); }
+        .app-logo i { -webkit-text-fill-color: var(--accent); margin-right: 6px; }
+        .app-sub { font-size: 11px; color: var(--hint); margin-top: 4px; letter-spacing: 1px; }
+
+        .card { background: linear-gradient(135deg, var(--card) 0%, var(--card2) 100%); border-radius: 18px; padding: 18px; margin-bottom: 14px; border: 1px solid var(--border); box-shadow: 0 4px 20px rgba(0,0,0,0.4); }
+        .balance-card { background: linear-gradient(135deg, #b829ff 0%, #4a00e0 100%); border: none; text-align: center; padding: 24px; box-shadow: 0 8px 30px var(--glow); }
+        .balance-card .label { font-size: 13px; opacity: 0.9; letter-spacing: 1px; }
+        .balance-val { font-size: 38px; font-weight: 900; margin: 8px 0 14px; }
+
+        .btn { width: 100%; padding: 15px; border-radius: 14px; border: none; font-size: 15px; font-weight: 800; color: #fff; background: linear-gradient(135deg, var(--accent), var(--accent2)); cursor: pointer; transition: 0.2s; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 4px 15px var(--glow); margin-top: 8px; }
+        .btn:active { transform: scale(0.96); opacity: 0.85; }
+        .btn-sec { background: rgba(184,41,255,0.1); border: 1px solid var(--border); box-shadow: none; }
+        .btn-sm { padding: 10px; font-size: 13px; }
+
+        input { width: 100%; padding: 14px; background: rgba(0,0,0,0.4); border: 1px solid var(--border); border-radius: 12px; color: #fff; font-size: 15px; margin-bottom: 12px; }
+        input::placeholder { color: var(--hint); }
+        input:focus { outline: none; border-color: var(--accent); }
+
+        /* Стили для ползунка */
+        input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; margin-bottom: 20px; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 24px; width: 24px; border-radius: 50%; background: var(--accent); cursor: pointer; margin-top: -8px; box-shadow: 0 0 10px var(--glow); }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 8px; cursor: pointer; background: rgba(184,41,255,0.2); border-radius: 4px; }
+        
+        .qty-btn { background: rgba(184,41,255,0.15); border: 1px solid var(--border); color: #fff; font-size: 20px; font-weight: bold; width: 45px; height: 45px; border-radius: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; user-select: none; }
+        .qty-btn:active { transform: scale(0.9); }
+
+        .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+        .cat { background: linear-gradient(135deg, var(--card) 0%, var(--card2) 100%); border-radius: 16px; padding: 18px 10px; text-align: center; cursor: pointer; border: 1px solid var(--border); transition: 0.2s; }
+        .cat:active { transform: scale(0.95); background: rgba(184,41,255,0.15); }
+        .cat i { font-size: 34px; margin-bottom: 8px; display: block; }
+        .cat .cat-name { font-weight: 800; font-size: 13px; }
+        .cat .cat-cnt { font-size: 11px; color: var(--hint); margin-top: 3px; }
+
+        .item { display: flex; justify-content: space-between; align-items: center; padding: 14px; background: rgba(0,0,0,0.3); border-radius: 14px; margin-bottom: 10px; border: 1px solid var(--border); transition: 0.2s; cursor: pointer; }
+        .item:active { transform: scale(0.98); }
+        .item.active { border-color: var(--accent); background: rgba(184,41,255,0.15); box-shadow: 0 0 15px var(--glow); }
+        .item-name { font-weight: 700; font-size: 14px; }
+        .item-desc { font-size: 11px; color: var(--hint); margin-top: 3px; line-height: 1.4; }
+        .item-price { font-weight: 800; color: var(--accent); font-size: 14px; white-space: nowrap; margin-left: 8px; }
+
+        .page-header { display: flex; align-items: center; gap: 12px; font-size: 20px; font-weight: 900; margin-bottom: 18px; letter-spacing: 0.5px; }
+        .back-btn { background: rgba(184,41,255,0.15); border: 1px solid var(--border); color: #fff; width: 40px; height: 40px; border-radius: 12px; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .back-btn:active { transform: scale(0.92); }
+
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; height: 72px; background: rgba(10,0,20,0.95); backdrop-filter: blur(20px); border-top: 1px solid var(--border); display: flex; justify-content: space-around; align-items: center; z-index: 100; padding-bottom: env(safe-area-inset-bottom); }
+        .nav-item { display: flex; flex-direction: column; align-items: center; color: var(--hint); font-size: 10px; background: none; border: none; gap: 4px; font-weight: 700; padding: 8px; transition: 0.2s; }
+        .nav-item.active { color: var(--accent); }
+        .nav-item i { font-size: 20px; }
+
+        .footer-tiktok { text-align: center; padding: 18px 15px 8px; font-size: 12px; color: var(--hint); letter-spacing: 1px; }
+        .footer-tiktok a { color: var(--accent); text-decoration: none; font-weight: 800; }
+    </style>
+</head>
+<body>
+<div class="app-header">
+    <div class="app-logo"><i class="fas fa-bolt"></i>ISMABOOST</div>
+    <div class="app-sub">ULTRA SMM PANEL</div>
+</div>
+
+<div id="tab-profile" class="container active">
+    <div class="card balance-card">
+        <div class="label">💰 ВАШ БАЛАНС</div>
+        <div class="balance-val" id="main-balance">Загрузка...</div>
+        
+        <!-- КНОПКА ОБНОВЛЕНИЯ БАЛАНСА -->
+        <button class="btn btn-sec" style="background:rgba(255,255,255,0.2); margin-bottom: 10px;" onclick="refreshBalance()">
+            <i class="fas fa-sync-alt"></i> Обновить баланс
+        </button>
+
+        <button class="btn btn-sec" style="background:rgba(255,255,255,0.2);" onclick="cmd('/topup')">
+            <i class="fas fa-plus-circle"></i> Пополнить
+        </button>
+    </div>
+    
+    <div class="card">
+        <h3 style="margin:0 0 12px;">📊 Мои действия</h3>
+        <button class="btn btn-sec btn-sm" onclick="cmd('/orders')"><i class="fas fa-list"></i> Мои заказы</button>
+        <button class="btn btn-sec btn-sm" onclick="cmd('/profile')"><i class="fas fa-user"></i> Профиль / Рефералка</button>
+        <button class="btn btn-sec btn-sm" onclick="cmd('/top')"><i class="fas fa-fire"></i> Топ услуги</button>
+    </div>
+</div>
+
+<div id="tab-social" class="container">
+    <div class="page-header"><i class="fas fa-rocket" style="color:var(--accent)"></i> НАКРУТКА</div>
+    <div class="grid" id="platforms-grid"></div>
+</div>
+
+<div id="screen-services" class="container">
+    <div class="page-header">
+        <button class="back-btn" onclick="navTo('tab-social')"><i class="fas fa-chevron-left"></i></button>
+        <span id="platform-title">Услуги</span>
+    </div>
+    <div id="services-list"></div>
+</div>
+
+<!-- НОВЫЙ ЭКРАН ОФОРМЛЕНИЯ (с ползунком и кнопками) -->
+<div id="screen-checkout" class="container">
+    <div class="page-header">
+        <button class="back-btn" onclick="navTo('screen-services')"><i class="fas fa-chevron-left"></i></button>
+        <span>Оформление</span>
+    </div>
+    
+    <div class="card">
+        <h3 id="checkout-title" style="margin:0 0 10px;">Услуга</h3>
+        <div id="checkout-desc" style="font-size:12px; color:var(--hint); margin-bottom:20px; line-height:1.5;"></div>
+
+        <label style="font-size:13px; font-weight:bold; color:var(--accent); margin-bottom:5px; display:block;">🔗 Ссылка на объект</label>
+        <input type="text" id="order-link" placeholder="https://t.me/channel/123" style="margin-bottom:20px;">
+
+        <label style="font-size:13px; font-weight:bold; color:var(--accent); margin-bottom:5px; display:block;">🔢 Количество (мин. 25)</label>
+        
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:15px;">
+            <div class="qty-btn" onclick="changeQty(-25)">-</div>
+            <input type="number" id="order-qty" value="25" min="25" oninput="updateTotal()" style="text-align:center; font-weight:bold; font-size:18px; margin-bottom:0;">
+            <div class="qty-btn" onclick="changeQty(25)">+</div>
+        </div>
+
+        <input type="range" id="order-slider" min="25" max="10000" step="25" value="25" oninput="syncQtyFromSlider()">
+
+        <div style="font-size:26px; font-weight:900; text-align:center; margin:25px 0; color:var(--accent);" id="checkout-total">0 ₽</div>
+        
+        <button class="btn" onclick="submitOrder()"><i class="fas fa-shopping-cart"></i> Оплатить</button>
+        <button class="btn btn-sec" onclick="navTo('screen-services')">Отмена</button>
+    </div>
+</div>
+
+<div id="tab-games" class="container">
+    <div class="page-header"><i class="fas fa-gamepad" style="color:var(--accent)"></i> ИГРЫ</div>
+    <div class="grid" id="games-grid"></div>
+</div>
+
+<div id="screen-game-items" class="container">
+    <div class="page-header">
+        <button class="back-btn" onclick="navTo('tab-games')"><i class="fas fa-chevron-left"></i></button>
+        <span id="game-title">Игра</span>
+    </div>
+    <div id="game-items-list"></div>
+    <div class="card" id="game-input-card">
+        <label style="font-size:12px; color:var(--hint);">📝 ID игрока / Логин / Данные</label>
+        <input type="text" id="game-input" placeholder="Введите ID / Ник / Сервер">
+        <button class="btn" onclick="submitGame()"><i class="fas fa-shopping-cart"></i> Купить</button>
+    </div>
+</div>
+
+<div id="tab-clicker" class="container">
+    <div class="page-header" style="justify-content:center;"><i class="fas fa-hand-pointer"></i> ТАПАЛКА</div>
+    <p style="text-align:center; color:var(--hint); font-size:13px;">Набери 22 222 тапа и получи<br><b style="color:var(--accent);">500 просмотров TikTok бесплатно!</b></p>
+    <div id="tap-coin" onclick="doTap()" style="width:200px; height:200px; background:radial-gradient(circle at 30% 30%, #d94dff 0%, var(--accent) 50%, #4a00e0 100%); border-radius:50%; margin:40px auto; display:flex; align-items:center; justify-content:center; font-size:80px; box-shadow: 0 15px 40px var(--glow), inset 0 -5px 20px rgba(0,0,0,0.3); cursor:pointer; user-select:none; transition:0.1s;">💎</div>
+    <h2 style="text-align:center; font-size:36px; margin:20px 0;" id="tap-score">0</h2>
+</div>
+
+<div id="tab-wheel" class="container">
+    <div class="page-header" style="justify-content:center;"><i class="fas fa-dharmachakra"></i> КОЛЕСО ФОРТУНЫ</div>
+    <div style="position:relative; width:320px; height:320px; margin:30px auto;">
+        <div style="position:absolute; top:-25px; left:50%; transform:translateX(-50%); font-size:50px; z-index:10; color:#fff; text-shadow:0 0 20px var(--glow);">▼</div>
+        <div id="wheel-wrapper" style="width:100%; height:100%; transition: transform 5s cubic-bezier(0.15, 0.9, 0.25, 1); filter: drop-shadow(0 0 30px var(--glow));">
+            <svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:100%;">
+                <g id="wheel-sectors"></g>
+                <circle cx="200" cy="200" r="195" fill="none" stroke="var(--accent)" stroke-width="10"/>
+                <circle cx="200" cy="200" r="40" fill="#0a0014" stroke="var(--accent)" stroke-width="4"/>
+                <text x="200" y="212" text-anchor="middle" font-size="30" fill="var(--accent)" font-weight="bold">🎁</text>
+            </svg>
+        </div>
+    </div>
+    <div style="text-align:center; font-weight:800; font-size:18px; color:var(--accent); height:32px; margin-top:10px;" id="wheel-text"></div>
+    <button class="btn" onclick="spinWheel()" style="margin-top:20px;"><i class="fas fa-dharmachakra"></i> Крутить за 150 ₽</button>
+    
+    <div id="wheel-prize-block" style="display:none; margin-top:20px;">
+        <div class="card" style="border: 1px solid var(--accent); background: rgba(184,41,255,0.1);">
+            <h4 style="margin:0 0 10px; color:var(--accent);">🎉 Введите ссылку для активации приза:</h4>
+            <input type="text" id="wheel-prize-link" placeholder="https://t.me/channel/123">
+            <button class="btn" onclick="activatePrize()">🎁 Активировать приз</button>
+        </div>
+    </div>
+</div>
+
+<div class="footer-tiktok">
+    <i class="fab fa-tiktok" style="color:var(--accent);"></i> мой тик ток
+    <a href="https://tiktok.com/@ismaaaa983" target="_blank">ismaaaa983</a>
+</div>
+
+<div class="bottom-nav">
+    <button class="nav-item active" onclick="switchTab(this,'tab-profile')"><i class="fas fa-user"></i>Профиль</button>
+    <button class="nav-item" onclick="switchTab(this,'tab-social')"><i class="fas fa-rocket"></i>Накрутка</button>
+    <button class="nav-item" onclick="switchTab(this,'tab-games')"><i class="fas fa-gamepad"></i>Игры</button>
+    <button class="nav-item" onclick="switchTab(this,'tab-clicker')"><i class="fas fa-hand-pointer"></i>Тапалка</button>
+    <button class="nav-item" onclick="switchTab(this,'tab-wheel')"><i class="fas fa-dharmachakra"></i>Рулетка</button>
+</div>
+<script>
+    const tg = window.Telegram.WebApp;
+    tg.expand(); tg.ready();
+
+    // Читаем баланс из URL
+    const urlParams = new URLSearchParams(window.location.search);
+    let userBalance = parseFloat(urlParams.get('bal')) || 0;
+    document.getElementById('main-balance').innerText = userBalance.toFixed(2) + ' ₽';
+
+    // Отправка в бот
+    function sendToBot(data) { tg.sendData(JSON.stringify(data)); tg.close(); }
+    function cmd(text) { sendToBot({action: 'command', text: text}); }
+
+    // 🆕 ФУНКЦИЯ ОБНОВЛЕНИЯ БАЛАНСА
+    function refreshBalance() {
+        // Добавляем случайный параметр к ссылке, чтобы сбросить кэш
+        let url = new URL(window.location.href);
+        url.searchParams.set('t', Date.now());
+        // Перезагружаем страницу. Бот подтянет свежий bal из базы
+        window.location.href = url.toString();
+    }
+
+    function switchTab(btn, tabId) {
+        document.querySelectorAll('.container').forEach(c => c.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        btn.classList.add('active');
+        window.scrollTo(0, 0);
+    }
+    function navTo(id) {
+        document.querySelectorAll('.container').forEach(c => c.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        window.scrollTo(0, 0);
+    }
+
+    // ===== ВСЕ УСЛУГИ =====
+    const CATALOG = {
+        telegram: { title: "Telegram", icon: "fab fa-telegram", color: "#0088cc", items: [
+            {id:"tg_stars", name:"🌟 Звёзды (на аккаунт)", desc:"⚡ Быстро\n🌟 Мин. 100 шт\n🔗 https://t.me/username\n💰 205₽/100 шт", price:205, pack:100},
+            {id:"tg_subs", name:"✅ Подписчики Без Списание💎", desc:"♾️ Навсегда без списаний 🛡️\n⚡ Моментальные 🚀\n✨ СТАРТ: 0 – 10 минут ⏱️\n📉 Списания: 0% ❌", price:114.99, pack:1000},
+            {id:"tg_views", name:"⚡️ Просмотры", desc:"🚀 До 200к/сутки\n💰 14.99₽/1к", price:14.99, pack:1000},
+            {id:"tg_bot_start", name:"🤖 Запуск Бота", desc:"🚀 100к/день\n💰 24.99₽/1к", price:24.99, pack:1000},
+            {id:"tg_react_pos", name:"🚀 Реакции 👍🔥❤️", desc:"🎭 Микс позитивных\n💰 15.70₽/1к", price:15.70, pack:1000},
+            {id:"tg_react_neg", name:"👎 Реакции 🖕💩", desc:"🎭 Микс негативных\n💰 15.70₽/1к", price:15.70, pack:1000},
+            {id:"tg_report_user_fraud", name:"🚨 Жалоба [Мошенничество]", desc:"⚡ Быстро\n💰 420₽/1к", price:420, pack:1000},
+            {id:"tg_report_user_spam", name:"🚨 Жалоба [Спам]", desc:"⚡ Быстро\n💰 420₽/1к", price:420, pack:1000},
+            {id:"tg_report_channel_fraud", name:"🚨 Жалобы на канал [Мошенничество]", desc:"⚡ Быстро\n💰 420₽/1к", price:420, pack:1000},
+            {id:"tg_report_channel_spam", name:"🚨 Жалобы на канал [Спам]", desc:"⚡ Быстро\n💰 420₽/1к", price:420, pack:1000},
+            {id:"tg_report_bot_fraud", name:"🚨 Жалоба на бота [Мошенничество]", desc:"⚡ Быстро\n💰 420₽/1к", price:420, pack:1000},
+            {id:"tg_report_bot_spam", name:"🚨 Жалоба на бота [Спам]", desc:"🐢 Медленно\n💰 420₽/1к", price:420, pack:1000}
+        ]},
+        tiktok: { title: "TikTok", icon: "fab fa-tiktok", color: "#fff", items: [
+            {id:"tt_subs", name:"💫 Подписчики ♻️ 30д", desc:"♻️ 30 дней\n💰 651₽/1к", price:651, pack:1000},
+            {id:"tt_views", name:"💎 Просмотры ♻️ 30д", desc:"♻️ 30 дней\n💰 24.99₽/1к", price:24.99, pack:1000},
+            {id:"tt_likes_twiboost", name:"❤️ TikTok Лайки ♻️", desc:"♻️ Без списаний🚀\n🕒 Запуск: 15 мин\n🔄 Отмена: возможна\n👥 Люди + боты\n🌍 Медленная скорость\n💰 379.99₽/1к", price:379.99, pack:1000},
+            {id:"tt_saves", name:"🌟 Сохранения ♻️", desc:"♻️ 30 дней\n💰 14.99₽/1к", price:14.99, pack:1000},
+            {id:"tt_reposts", name:"🔁 Репосты [Гарантия 30д ♻️]", desc:"♻️ Гарантия 30 дней\n⚡ Быстрый старт\n🚀 До 10 млн/сутки\n💰 45.93₽/1к", price:45.93, pack:1000}
+        ]},
+        youtube: { title: "YouTube", icon: "fab fa-youtube", color: "#ff0000", items: [
+            {id:"yt_subs", name:"👥 Подписчики ♻️", desc:"♻️ 30 дней\n💰 3502₽/1к", price:3502, pack:1000},
+            {id:"yt_views", name:"👀 Просмотры ♻️", desc:"♻️ 30 дней\n💰 164₽/1к", price:164, pack:1000},
+            {id:"yt_likes", name:"❤️ Лайки ♻️", desc:"♻️ 30 дней\n💰 529₽/1к", price:529, pack:1000}
+        ]},
+        instagram: { title: "Instagram", icon: "fab fa-instagram", color: "#e84393", items: [
+            {id:"ig_subs", name:"👥 Подписчики ♻️", desc:"♻️ 30 дней\n💰 437₽/1к", price:437, pack:1000},
+            {id:"ig_likes", name:"❤️ Instagram Лайки (365 дней)", desc:"✅ Без списаний\n♻️ Гарантия 365 дней\n⚡ Быстрый старт\n👥 Качественные аккаунты\n💰 89₽/1к", price:89, pack:1000},
+            {id:"ig_views", name:"👁 Просмотры", desc:"🚀 Reels\n💰 19.99₽/1к", price:19.99, pack:1000},
+            {id:"ig_reach", name:"📊 Охват+Показы", desc:"📈 Плавные\n💰 13₽/1к", price:13, pack:1000},
+            {id:"ig_saves", name:"💾 Сохранения", desc:"🚀 Быстро\n💰 8₽/1к", price:8, pack:1000},
+            {id:"ig_reposts", name:"🔄 Репосты", desc:"🔗 Все ссылки\n💰 4₽/1к", price:4, pack:1000}
+        ]},
+        vk: { title: "ВКонтакте", icon: "fab fa-vk", color: "#4a76a8", items: [
+            {id:"vk_subs", name:"👥 Подписчики ⛔", desc:"⚠️ Без гарантии\n💰 63₽/1к", price:63, pack:1000},
+            {id:"vk_likes", name:"❤️ Лайки ♻️", desc:"♻️ 30 дней\n💰 38₽/1к", price:38, pack:1000},
+            {id:"vk_views", name:"👀 Просмотры", desc:"🌟 Лучшая цена\n💰 1₽/1к", price:1, pack:1000},
+            {id:"vk_reposts", name:"🔁 Репосты РУ", desc:"👥 РУ имена\n💰 221₽/1к", price:221, pack:1000}
+        ]},
+        twitch: { title: "Twitch", icon: "fab fa-twitch", color: "#9146ff", items: [
+            {id:"tw_subs", name:"👥 Подписчики ♻️", desc:"♻️ 30 дней\n💰 21₽/1к", price:21, pack:1000},
+            {id:"tw_views", name:"👀 Просмотры", desc:"🎥 Качество\n💰 25₽/1к", price:25, pack:1000},
+            {id:"tw_viewers", name:"👥 Зрители эфира", desc:"⏱ 15 мин\n💰 60₽/1к", price:60, pack:1000}
+        ]},
+        twitter: { title: "Twitter (X)", icon: "fab fa-twitter", color: "#1da1f2", items: [
+            {id:"twt_subs", name:"👥 Подписчики ⛔", desc:"⚠️ Без гарантии\n💰 211₽/1к", price:211, pack:1000},
+            {id:"twt_likes", name:"❤️ Лайки ♻️", desc:"♻️ 30 дней\n💰 561₽/1к", price:561, pack:1000},
+            {id:"twt_views", name:"👀 Просмотры ♻️365", desc:"♻️ 365 дней\n💰 3₽/1к", price:3, pack:1000}
+        ]},
+        likee: { title: "Likee", icon: "fas fa-video", color: "#ff0050", items: [
+            {id:"lk_subs", name:"👥 Подписчики [Реальные]", desc:"👥 Реальные\n💰 512₽/1к", price:512, pack:1000},
+            {id:"lk_likes", name:"❤️ Лайки [Реальные]", desc:"❤️ Реальные\n💰 258₽/1к", price:258, pack:1000}
+        ]},
+        facebook: { title: "Facebook", icon: "fab fa-facebook", color: "#1877f2", items: [
+            {id:"fb_subs", name:"👥 Подписчики ♻️", desc:"♻️ 30 дней\n💰 70₽/1к", price:70, pack:1000}
+        ]},
+        rutube: { title: "Rutube", icon: "fas fa-play-circle", color: "#ff0000", items: [
+            {id:"rt_views1", name:"👀 Просмотры реал.", desc:"🇷🇺 ГЕО РФ\n💰 94₽/1к", price:94, pack:1000},
+            {id:"rt_views2", name:"👀 Просмотры мгнов.", desc:"⚡ Мгновенно\n💰 24₽/1к", price:24, pack:1000},
+            {id:"rt_emojis", name:"😍 Эмоции ♻️", desc:"♻️ 30 дней\n💰 211₽/1к", price:211, pack:1000},
+            {id:"rt_likes", name:"❤️ Лайки В топ ♻️", desc:"♻️ 30 дней\n💰 702₽/1к", price:702, pack:1000}
+        ]},
+        max: { title: "MAX", icon: "fas fa-comment-dots", color: "#00b3b3", items: [
+            {id:"mx_subs", name:"👥 Подписчики", desc:"🇷🇺 РФ/СНГ\n💰 3395₽/1к", price:3395, pack:1000},
+            {id:"mx_views", name:"👀 Просмотры", desc:"👥 Живые\n💰 1423₽/1к", price:1423, pack:1000},
+            {id:"mx_reposts", name:"🔁 Репосты", desc:"⚡ Быстро\n💰 525₽/1к", price:525, pack:1000},
+            {id:"mx_bot_start", name:"🤖 Запуск бота", desc:"⚡ Мгновенно\n💰 3987₽/1к", price:3987, pack:100
+<script>
+    const tg = window.Telegram.WebApp;
+    tg.expand(); tg.ready();
+
+    // Читаем баланс из URL
+    const urlParams = new URLSearchParams(window.location.search);
+    let userBalance = parseFloat(urlParams.get('bal')) || 0;
+    document.getElementById('main-balance').innerText = userBalance.toFixed(2) + ' ₽';
+
+    // Отправка в бот
+    function sendToBot(data) { tg.sendData(JSON.stringify(data)); tg.close(); }
+    function cmd(text) { sendToBot({action: 'command', text: text}); }
+
+    // 🆕 ФУНКЦИЯ ОБНОВЛЕНИЯ БАЛАНСА
+    function refreshBalance() {
+        let url = new URL(window.location.href);
+        url.searchParams.set('t', Date.now()); // Сбрасываем кэш
+        window.location.href = url.toString();
+    }
+
+    function switchTab(btn, tabId) {
+        document.querySelectorAll('.container').forEach(c => c.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        btn.classList.add('active');
+        window.scrollTo(0, 0);
+    }
+    function navTo(id) {
+        document.querySelectorAll('.container').forEach(c => c.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        window.scrollTo(0, 0);
+    }
+
+    // ===== ВСЕ УСЛУГИ =====
+    const CATALOG = {
+        telegram: { title: "Telegram", icon: "fab fa-telegram", color: "#0088cc", items: [
+            {id:"tg_stars", name:"🌟 Звёзды (на аккаунт)", desc:"⚡ Быстро\n🌟 Мин. 100 шт\n🔗 https://t.me/username\n💰 205₽/100 шт", price:205, pack:100},
+            {id:"tg_subs", name:"✅ Подписчики Без Списание💎", desc:"♾️ Навсегда без списаний 🛡️\n⚡ Моментальные 🚀\n✨ СТАРТ: 0 – 10 минут ⏱️\n📉 Списания: 0% ❌", price:114.99, pack:1000},
+            {id:"tg_views", name:"⚡️ Просмотры", desc:"🚀 До 200к/сутки\n💰 14.99₽/1к", price:14.99, pack:1000},
+            {id:"tg_bot_start", name:"🤖 Запуск Бота", desc:"🚀 100к/день\n💰 24.99₽/1к", price:24.99, pack:1000},
+            {id:"tg_react_pos", name:"🚀 Реакции 👍🔥❤️", desc:"🎭 Микс позитивных\n💰 15.70₽/1к", price:15.70, pack:1000},
+            {id:"tg_react_neg", name:"👎 Реакции 🖕💩", desc:"🎭 Микс негативных\n💰 15.70₽/1к", price:15.70, pack:1000},
+            {id:"tg_report_user_fraud", name:"🚨 Жалоба [Мошенничество]", desc:"⚡ Быстро\n💰 420₽/1к", price:420, pack:1000},
+            {id:"tg_report_user_spam", name:"🚨 Жалоба [Спам]", desc:"⚡ Быстро\n💰 420₽/1к", price:420, pack:1000},
+            {id:"tg_report_channel_fraud", name:"🚨 Жалобы на канал [Мошенничество]", desc:"⚡ Быстро\n💰 420₽/1к", price:420, pack:1000},
+            {id:"tg_report_channel_spam", name:"🚨 Жалобы на канал [Спам]", desc:"⚡ Быстро\n💰 420₽/1к", price:420, pack:1000},
+            {id:"tg_report_bot_fraud", name:"🚨 Жалоба на бота [Мошенничество]", desc:"⚡ Быстро\n💰 420₽/1к", price:420, pack:1000},
+            {id:"tg_report_bot_spam", name:"🚨 Жалоба на бота [Спам]", desc:"🐢 Медленно\n💰 420₽/1к", price:420, pack:1000}
+        ]},
+        tiktok: { title: "TikTok", icon: "fab fa-tiktok", color: "#fff", items: [
+            {id:"tt_subs", name:"💫 Подписчики ♻️ 30д", desc:"♻️ 30 дней\n💰 651₽/1к", price:651, pack:1000},
+            {id:"tt_views", name:"💎 Просмотры ♻️ 30д", desc:"♻️ 30 дней\n💰 24.99₽/1к", price:24.99, pack:1000},
+            {id:"tt_likes_twiboost", name:"❤️ TikTok Лайки ♻️", desc:"♻️ Без списаний🚀\n🕒 Запуск: 15 мин\n🔄 Отмена: возможна\n👥 Люди + боты\n🌍 Медленная скорость\n💰 379.99₽/1к", price:379.99, pack:1000},
+            {id:"tt_saves", name:"🌟 Сохранения ♻️", desc:"♻️ 30 дней\n💰 14.99₽/1к", price:14.99, pack:1000},
+            {id:"tt_reposts", name:"🔁 Репосты [Гарантия 30д ♻️]", desc:"♻️ Гарантия 30 дней\n⚡ Быстрый старт\n🚀 До 10 млн/сутки\n💰 45.93₽/1к", price:45.93, pack:1000}
+        ]},
+        youtube: { title: "YouTube", icon: "fab fa-youtube", color: "#ff0000", items: [
+            {id:"yt_subs", name:"👥 Подписчики ♻️", desc:"♻️ 30 дней\n💰 3502₽/1к", price:3502, pack:1000},
+            {id:"yt_views", name:"👀 Просмотры ♻️", desc:"♻️ 30 дней\n💰 164₽/1к", price:164, pack:1000},
+            {id:"yt_likes", name:"❤️ Лайки ♻️", desc:"♻️ 30 дней\n💰 529₽/1к", price:529, pack:1000}
+        ]},
+        instagram: { title: "Instagram", icon: "fab fa-instagram", color: "#e84393", items: [
+            {id:"ig_subs", name:"👥 Подписчики ♻️", desc:"♻️ 30 дней\n💰 437₽/1к", price:437, pack:1000},
+            {id:"ig_likes", name:"❤️ Instagram Лайки (365 дней)", desc:"✅ Без списаний\n♻️ Гарантия 365 дней\n⚡ Быстрый старт\n👥 Качественные аккаунты\n💰 89₽/1к", price:89, pack:1000},
+            {id:"ig_views", name:"👁 Просмотры", desc:"🚀 Reels\n💰 19.99₽/1к", price:19.99, pack:1000},
+            {id:"ig_reach", name:"📊 Охват+Показы", desc:"📈 Плавные\n💰 13₽/1к", price:13, pack:1000},
+            {id:"ig_saves", name:"💾 Сохранения", desc:"🚀 Быстро\n💰 8₽/1к", price:8, pack:1000},
+            {id:"ig_reposts", name:"🔄 Репосты", desc:"🔗 Все ссылки\n💰 4₽/1к", price:4, pack:1000}
+        ]},
+        vk: { title: "ВКонтакте", icon: "fab fa-vk", color: "#4a76a8", items: [
+            {id:"vk_subs", name:"👥 Подписчики ⛔", desc:"⚠️ Без гарантии\n💰 63₽/1к", price:63, pack:1000},
+            {id:"vk_likes", name:"❤️ Лайки ♻️", desc:"♻️ 30 дней\n💰 38₽/1к", price:38, pack:1000},
+            {id:"vk_views", name:"👀 Просмотры", desc:"🌟 Лучшая цена\n💰 1₽/1к", price:1, pack:1000},
+            {id:"vk_reposts", name:"🔁 Репосты РУ", desc:"👥 РУ имена\n💰 221₽/1к", price:221, pack:1000}
+        ]},
+        twitch: { title: "Twitch", icon: "fab fa-twitch", color: "#9146ff", items: [
+            {id:"tw_subs", name:"👥 Подписчики ♻️", desc:"♻️ 30 дней\n💰 21₽/1к", price:21, pack:1000},
+            {id:"tw_views", name:"👀 Просмотры", desc:"🎥 Качество\n💰 25₽/1к", price:25, pack:1000},
+            {id:"tw_viewers", name:"👥 Зрители эфира", desc:"⏱ 15 мин\n💰 60₽/1к", price:60, pack:1000}
+        ]},
+        twitter: { title: "Twitter (X)", icon: "fab fa-twitter", color: "#1da1f2", items: [
+            {id:"twt_subs", name:"👥 Подписчики ⛔", desc:"⚠️ Без гарантии\n💰 211₽/1к", price:211, pack:1000},
+            {id:"twt_likes", name:"❤️ Лайки ♻️", desc:"♻️ 30 дней\n💰 561₽/1к", price:561, pack:1000},
+            {id:"twt_views", name:"👀 Просмотры ♻️365", desc:"♻️ 365 дней\n💰 3₽/1к", price:3, pack:1000}
+        ]},
+        likee: { title: "Likee", icon: "fas fa-video", color: "#ff0050", items: [
+            {id:"lk_subs", name:"👥 Подписчики [Реальные]", desc:"👥 Реальные\n💰 512₽/1к", price:512, pack:1000},
+            {id:"lk_likes", name:"❤️ Лайки [Реальные]", desc:"❤️ Реальные\n💰 258₽/1к", price:258, pack:1000}
+        ]},
+        facebook: { title: "Facebook", icon: "fab fa-facebook", color: "#1877f2", items: [
+            {id:"fb_subs", name:"👥 Подписчики ♻️", desc:"♻️ 30 дней\n💰 70₽/1к", price:70, pack:1000}
+        ]},
+        rutube: { title: "Rutube", icon: "fas fa-play-circle", color: "#ff0000", items: [
+            {id:"rt_views1", name:"👀 Просмотры реал.", desc:"🇷🇺 ГЕО РФ\n💰 94₽/1к", price:94, pack:1000},
+            {id:"rt_views2", name:"👀 Просмотры мгнов.", desc:"⚡ Мгновенно\n💰 24₽/1к", price:24, pack:1000},
+            {id:"rt_emojis", name:"😍 Эмоции ♻️", desc:"♻️ 30 дней\n💰 211₽/1к", price:211, pack:1000},
+            {id:"rt_likes", name:"❤️ Лайки В топ ♻️", desc:"♻️ 30 дней\n💰 702₽/1к", price:702, pack:1000}
+        ]},
+        max: { title: "MAX", icon: "fas fa-comment-dots", color: "#00b3b3", items: [
+            {id:"mx_subs", name:"👥 Подписчики", desc:"🇷🇺 РФ/СНГ\n💰 3395₽/1к", price:3395, pack:1000},
+            {id:"mx_views", name:"👀 Просмотры", desc:"👥 Живые\n💰 1423₽/1к", price:1423, pack:1000},
+            {id:"mx_reposts", name:"🔁 Репосты", desc:"⚡ Быстро\n💰 525₽/1к", price:525, pack:1000},
+            {id:"mx_bot_start", name:"🤖 Запуск бота", desc:"⚡ Мгновенно\n💰 3987₽/1к", price:3987, pack:1000}
+        ]}
+    };
+// ===== ВСЕ ИГРЫ =====
+const GAMES = {
+    pubg: { title: "PUBG Mobile", icon: "fas fa-crosshairs", color: "#ff9f43", submenu: true, items: [] },
+    brawl: { title: "Brawl Stars", icon: "fas fa-star", color: "#ffd700", items: [
+        {name:"Black Pass", price:1194}, {name:"Brawl Pass Plus", price:1574}, {name:"Pro Pass", price:3106}
+    ]},
+    roblox: { title: "Roblox", icon: "fas fa-cube", color: "#ff0000", items: [
+        {name:"80 Robux (РФ)", price:127}, {name:"500 Robux (РФ)", price:763}, {name:"600 Robux (РФ)", price:912},
+        {name:"800 Robux (РФ)", price:1015}, {name:"1000 Robux (США)", price:1148}, {name:"1500 Robux (США)", price:1489},
+        {name:"1200 Robux (РФ)", price:1772}, {name:"1500 Robux (РФ)", price:1899}
+    ]},
+    br: { title: "Black Russia", icon: "fas fa-car", color: "#00d4ff", items: [
+        {name:"10 коинов", price:15}, {name:"50 коинов", price:75}, {name:"100 коинов", price:150},
+        {name:"500 коинов", price:750}, {name:"1000 коинов", price:1500}
+    ]},
+    car_parking: { title: "Car Parking KING", icon: "fas fa-parking", color: "#ffcc00", items: [
+        {name:"1 аккаунт — 50 ₽", price:50}, {name:"2 аккаунта — 100 ₽", price:100},
+        {name:"3 аккаунта — 150 ₽", price:150}, {name:"5 аккаунтов — 200 ₽", price:200},
+        {name:"10 аккаунтов — 325 ₽", price:325}
+    ]}
+};
+
+const PUBG_UC = [
+    {name:"60 UC", price:112}, {name:"325 UC", price:478}, {name:"660 UC", price:929},
+    {name:"985 UC", price:1500}, {name:"1320 UC", price:1975}, {name:"1800 UC", price:2411},
+    {name:"2460 UC", price:3398}, {name:"2850 UC", price:1722}
+];
+
+// ===== ОТРИСОВКА ПЛАТФОРМ =====
+let platGrid = document.getElementById('platforms-grid');
+for (let key in CATALOG) {
+    let p = CATALOG[key];
+    platGrid.innerHTML += `<div class="cat" onclick="openPlatform('${key}')"><i class="${p.icon}" style="color:${p.color}"></i><div class="cat-name">${p.title}</div><div class="cat-cnt">${p.items.length} услуг</div></div>`;
+}
+
+let currentPlat = ""; let currentItem = null;
+function openPlatform(key) {
+    currentPlat = key;
+    document.getElementById('platform-title').innerText = CATALOG[key].title;
+    let list = document.getElementById('services-list'); list.innerHTML = "";
+    CATALOG[key].items.forEach(item => {
+        let descHtml = (item.desc || "").replace(/\n/g, "<br>");
+        list.innerHTML += `<div class="item" onclick="selectService(this, '${item.id}', ${item.price}, ${item.pack}, '${item.name.replace(/'/g,'')}', '${item.desc.replace(/'/g,'')}')">
+            <div style="flex:1;"><div class="item-name">${item.name}</div><div class="item-desc">${descHtml}</div></div>
+            <div class="item-price">${item.price}₽</div>
+        </div>`;
+    });
+    navTo('screen-services');
+}
+
+// Новая логика при выборе услуги
+function selectService(el, id, price, pack, name, desc) {
+    document.querySelectorAll('#services-list .item').forEach(i => i.classList.remove('active'));
+    el.classList.add('active');
+    currentItem = {id:id, price:price, pack:pack, name:name};
+    
+    document.getElementById('checkout-title').innerText = name;
+    document.getElementById('checkout-desc').innerHTML = (desc || "").replace(/\n/g, "<br>");
+    
+    // Настраиваем ползунок (макс. 10000 или x10 от базовой пачки)
+    let slider = document.getElementById('order-slider');
+    slider.max = Math.max(10000, pack * 10);
+    slider.step = 25;
+    
+    let defaultQty = 100;
+    document.getElementById('order-qty').value = defaultQty;
+    slider.value = defaultQty;
+    
+    updateTotal();
+    navTo('screen-checkout');
+}
+
+// Кнопки + и -
+function changeQty(amount) {
+    let input = document.getElementById('order-qty');
+    let newVal = parseInt(input.value || 0) + amount;
+    if (newVal < 25) newVal = 25;
+    if (newVal > parseInt(document.getElementById('order-slider').max)) {
+        newVal = parseInt(document.getElementById('order-slider').max);
+    }
+    input.value = newVal;
+    document.getElementById('order-slider').value = newVal;
+    updateTotal();
+}
+
+// Перетаскивание ползунка
+function syncQtyFromSlider() {
+    let sliderVal = document.getElementById('order-slider').value;
+    document.getElementById('order-qty').value = sliderVal;
+    updateTotal();
+}
+
+// Ввод количества вручную
+function updateTotal() {
+    if (!currentItem) return;
+    let qty = parseInt(document.getElementById('order-qty').value) || 25;
+    
+    if (qty >= 25) {
+        document.getElementById('order-slider').value = qty;
+    }
+
+    let total = (currentItem.price / currentItem.pack) * qty;
+    document.getElementById('checkout-total').innerText = total.toFixed(2) + ' ₽';
+}
+
+// Оплата услуги
+function submitOrder() {
+    let link = document.getElementById('order-link').value.trim();
+    let qty = parseInt(document.getElementById('order-qty').value);
+    
+    if (link.length < 3) return tg.showAlert("Введите ссылку на объект!");
+    if (qty < 25) return tg.showAlert("Минимальное количество — 25 шт!");
+    
+    tg.showPopup({
+        title: 'Подтверждение',
+        message: `Оплатить ${((currentItem.price / currentItem.pack) * qty).toFixed(2)} ₽?`,
+        buttons: [{id: 'cancel', type: 'cancel'}, {id: 'ok', type: 'default', text: 'Оплатить'}]
+    }, function(buttonId) {
+        if (buttonId === 'ok') {
+            sendToBot({action:"order", service:currentItem.id, link:link, qty:qty});
+        }
+    });
+}
+    // ===== ОТРИСОВКА ИГР =====
+    let gameGrid = document.getElementById('games-grid');
+    for (let key in GAMES) {
+        let g = GAMES[key];
+        let cnt = g.submenu ? '2' : g.items.length;
+        gameGrid.innerHTML += `<div class="cat" onclick="openGame('${key}')"><i class="${g.icon}" style="color:${g.color}"></i><div class="cat-name">${g.title}</div><div class="cat-cnt">${cnt} ${g.submenu ? 'раздела' : 'товаров'}</div></div>`;
+    }
+
+    let currentGame = ""; let currentGameItem = null;
+    function openGame(key) {
+        currentGame = key;
+        let g = GAMES[key];
+        document.getElementById('game-title').innerText = g.title;
+        let list = document.getElementById('game-items-list'); list.innerHTML = "";
+        let inputCard = document.getElementById('game-input-card');
+
+        if (g.submenu) {
+            list.innerHTML = `
+                <div class="item" onclick="openPubgCarry()">
+                    <div style="flex:1;"><div class="item-name">🏆 Сопровождение</div><div class="item-desc">GOLD ELITE 8 — от 249 ₽</div></div>
+                </div>
+                <div class="item" onclick="openPubgUC()">
+                    <div style="flex:1;"><div class="item-name">🔫 UC (на выбор)</div><div class="item-desc">60–2850 UC — от 112 ₽</div></div>
+                </div>
+            `;
+            inputCard.style.display = 'none';
+            currentGameItem = null;
+            navTo('screen-game-items');
+            return;
+        }
+
+        inputCard.style.display = 'block';
+        g.items.forEach(item => {
+            list.innerHTML += `<div class="item" onclick="selectGame(this, '${item.name.replace(/'/g,'')}', ${item.price})">
+                <div class="item-name">${item.name}</div><div class="item-price">${item.price}₽</div>
+            </div>`;
+        });
+        currentGameItem = null;
+        navTo('screen-game-items');
+    }
+
+    function openPubgCarry() {
+        tg.showAlert("🏆 GOLD СОПРОВОЖДЕНИЕ | ELITE 8\n\n🎒 СТАРТОВЫЙ НАБОР:\n• Фулл 6 сет (с рюкзаком)\n• Освинцованная ткань\n• Два ремня\n• МК14 (высшая) + фулл обвесы\n\n💰 ГАРАНТИЯ ВЫНОСА:\n• С радиации: от 9 до 15 млн\n• С людей: от 10 до 15 высших пушек\n• Бонус: 5–10 золотых билетов\n\n💵 Цена: 249 ₽\n\n⚠️ После нажатия ОК — напиши @ismaboy014 для заказа");
+        setTimeout(() => { tg.openTelegramLink("https://t.me/ismaboy014"); }, 1500);
+    }
+
+    function openPubgUC() {
+        let list = document.getElementById('game-items-list'); list.innerHTML = "";
+        PUBG_UC.forEach(item => {
+            list.innerHTML += `<div class="item" onclick="selectGame(this, '${item.name}', ${item.price})">
+                <div class="item-name">${item.name}</div><div class="item-price">${item.price}₽</div>
+            </div>`;
+        });
+        document.getElementById('game-input-card').style.display = 'block';
+        currentGameItem = null;
+    }
+
+    function selectGame(el, name, price) {
+        document.querySelectorAll('#game-items-list .item').forEach(i => i.classList.remove('active'));
+        el.classList.add('active');
+        currentGameItem = {name:name, price:price};
+    }
+
+    function submitGame() {
+        let inputs = document.getElementById('game-input').value.trim();
+        if (!currentGameItem) return tg.showAlert("Выберите товар!");
+        if (inputs.length < 2) return tg.showAlert("Введите ID/Логин!");
+        
+        tg.showPopup({
+            title: 'Подтверждение',
+            message: `Купить ${currentGameItem.name} за ${currentGameItem.price} ₽?`,
+            buttons: [{id: 'cancel', type: 'cancel'}, {id: 'ok', type: 'default', text: 'Купить'}]
+        }, function(buttonId) {
+            if (buttonId === 'ok') sendToBot({action:"order_game", item_name:currentGameItem.name, price:currentGameItem.price, inputs:{"Данные":inputs}});
+        });
+    }
+
+    // ===== ТАПАЛКА =====
+    let taps = parseInt(localStorage.getItem('isma_taps') || 0);
+    const MAX_TAPS = 22222;
+    function updateTapUI() {
+        document.getElementById('tap-score').innerText = taps;
+    }
+    updateTapUI();
+
+    function doTap() {
+        if (taps >= MAX_TAPS) return;
+        taps++; localStorage.setItem('isma_taps', taps); updateTapUI();
+        let coin = document.getElementById('tap-coin');
+        coin.style.transform = 'scale(0.9)';
+        setTimeout(() => coin.style.transform = 'scale(1)', 50);
+    }
+
+    // ===== РУЛЕТКА (19 СЕКТОРОВ) =====
+    const WHEEL_PRIZES = [
+        "💀 Пусто", "👀 1000 TT", "❤️ 100 IG", "👀 5000 IG", "❤️ 500 TT",
+        "💾 500 TT", "🔁 500 TT", "👀 5000 YT", "👀 5000 VK", "👀 5000 RT",
+        "👥 500 TG", "👀 10000 TG", "🚀 5000 Бот", "🚀 500 Реак", "❤️ 500 YT",
+        "👥 500 TT", "📊 5000 IG", "🌟 100 Звёзд", "👑 1000 TG"
+    ];
+    const WHEEL_COLORS = ["#b829ff", "#4a00e0", "#7b1fa2", "#2d1b4e", "#8a2be2", "#6a1b9a", "#4a148c", "#9c27b0", "#673ab7", "#512da8"];
+
+    const sectorsGroup = document.getElementById('wheel-sectors');
+    const numSectors = WHEEL_PRIZES.length;
+    const anglePerSector = 360 / numSectors;
+
+    function polarToCartesian(cx, cy, r, angleDeg) {
+        const angleRad = (angleDeg - 90) * Math.PI / 180;
+        return { x: cx + r * Math.cos(angleRad), y: cy + r * Math.sin(angleRad) };
+    }
+
+    function describeArc(cx, cy, r, startAngle, endAngle) {
+        const start = polarToCartesian(cx, cy, r, endAngle);
+        const end = polarToCartesian(cx, cy, r, startAngle);
+        const largeArc = endAngle - startAngle <= 180 ? "0" : "1";
+        return `M ${cx} ${cy} L ${start.x} ${start.y} A ${r} ${r} 0 ${largeArc} 0 ${end.x} ${end.y} Z`;
+    }
+
+    for (let i = 0; i < numSectors; i++) {
+        const startAngle = i * anglePerSector;
+        const endAngle = (i + 1) * anglePerSector;
+        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        path.setAttribute("d", describeArc(200, 200, 185, startAngle, endAngle));
+        path.setAttribute("fill", WHEEL_COLORS[i % WHEEL_COLORS.length]);
+        path.setAttribute("stroke", "#0a0014");
+        path.setAttribute("stroke-width", "2");
+        sectorsGroup.appendChild(path);
+
+        const midAngle = startAngle + anglePerSector / 2;
+        const textPos = polarToCartesian(200, 200, 125, midAngle);
+        const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        text.setAttribute("x", textPos.x);
+        text.setAttribute("y", textPos.y);
+        text.setAttribute("text-anchor", "middle");
+        text.setAttribute("dominant-baseline", "middle");
+        text.setAttribute("font-size", "11");
+        text.setAttribute("font-weight", "bold");
+        text.setAttribute("fill", "#fff");
+        text.setAttribute("transform", `rotate(${midAngle}, ${textPos.x}, ${textPos.y})`);
+        text.textContent = WHEEL_PRIZES[i];
+        sectorsGroup.appendChild(text);
+    }
+
+    let wheelDeg = 0;
+    let isSpinning = false;
+    let currentWheelPrize = "";
+
+    function spinWheel() {
+        if (isSpinning) return;
+        isSpinning = true;
+        document.getElementById('wheel-text').innerText = "Крутим... 🎲";
+        document.getElementById('wheel-prize-block').style.display = 'none';
+
+        const winIndex = Math.floor(Math.random() * numSectors);
+        currentWheelPrize = WHEEL_PRIZES[winIndex];
+        
+        const midAngle = winIndex * anglePerSector + anglePerSector / 2;
+        const totalRotation = 360 * 6 + (360 - midAngle);
+
+        wheelDeg += totalRotation;
+        document.getElementById('wheel-wrapper').style.transform = `rotate(${wheelDeg}deg)`;
+
+        setTimeout(() => {
+            isSpinning = false;
+            if (winIndex === 0) {
+                document.getElementById('wheel-text').innerText = "💀 Пусто... Повезет в следующий раз!";
+                sendToBot({action:"blindbox", link: "empty"});
+            } else {
+                document.getElementById('wheel-text').innerText = `🎁 Вы выиграли: ${currentWheelPrize}`;
+                document.getElementById('wheel-prize-block').style.display = 'block';
+            }
+        }, 5200);
+    }
+
+    function activatePrize() {
+        let link = document.getElementById('wheel-prize-link').value.trim();
+        if (link.length < 3) return tg.showAlert("Пожалуйста, введите ссылку!");
+        
+        tg.showPopup({
+            title: 'Активация',
+            message: `Активировать приз: ${currentWheelPrize}?`,
+            buttons: [{id: 'cancel', type: 'cancel'}, {id: 'ok', type: 'default', text: 'Активировать'}]
+        }, function(buttonId) {
+            if (buttonId === 'ok') {
+                sendToBot({action:"blindbox", link: link});
+            }
+        });
+    }
+</script>
+</body>
+</html>
