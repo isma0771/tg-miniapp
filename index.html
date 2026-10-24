@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>IsmaBoost ULTRA</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* 15 ЭКСКЛЮЗИВНЫХ ТЕМ */
+        :root { --bg-color: #0a0012; --text-color: #ffffff; --hint-color: #8e8e93; --button-color: #b829ff; --secondary-bg: rgba(255, 255, 255, 0.04); --accent: #d68bff; }
+        [data-theme="violet"] { --bg-color: #120024; --button-color: #8a2be2; --accent: #b829ff; }
+        [data-theme="gold"] { --bg-color: #1a1800; --button-color: #ffaa00; --accent: #ffcc00; --text-color: #fff9e6; }
+        [data-theme="matrix"] { --bg-color: #001100; --button-color: #00ff00; --accent: #00cc00; --text-color: #e6ffe6; }
+        [data-theme="crimson"] { --bg-color: #1a0000; --button-color: #ff0033; --accent: #cc0000; }
+        [data-theme="ocean"] { --bg-color: #000b1a; --button-color: #0066ff; --accent: #0099ff; }
+        [data-theme="forest"] { --bg-color: #001a09; --button-color: #009933; --accent: #00cc66; }
+        [data-theme="sunset"] { --bg-color: #1a0800; --button-color: #ff6600; --accent: #ff9933; }
+        [data-theme="neon"] { --bg-color: #000000; --button-color: #ff00ff; --accent: #00ffff; }
+        [data-theme="midnight"] { --bg-color: #050510; --button-color: #3333cc; --accent: #6666ff; }
+        [data-theme="bubblegum"] { --bg-color: #1a0011; --button-color: #ff3399; --accent: #ff66b2; }
+        [data-theme="coffee"] { --bg-color: #140d07; --button-color: #8b5a2b; --accent: #a0522d; }
+        [data-theme="aqua"] { --bg-color: #001414; --button-color: #00b3b3; --accent: #00e6e6; }
+        [data-theme="lava"] { --bg-color: #1a0500; --button-color: #cc3300; --accent: #ff4500; }
+        [data-theme="cyberpunk"] { --bg-color: #0f0f1c; --button-color: #fcee0a; --accent: #ff003c; --text-color: #e0e0e0; }
+
+        body { font-family: -apple-system, sans-serif; background: var(--bg-color); color: var(--text-color); margin: 0; padding: 0 0 85px 0; overflow-x: hidden; transition: 0.3s; -webkit-tap-highlight-color: transparent; }
+        .watermark { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-15deg); font-size: 14vw; font-weight: 900; color: rgba(255, 255, 255, 0.02); z-index: -1; pointer-events: none; }
+        
+        .container { display: none; opacity: 0; animation: smoothSlideUp 0.4s forwards; padding: 15px; }
+        .container.active { display: block; }
+        @keyframes smoothSlideUp { from { opacity: 0; transform: translateY(15px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
+        .header { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
+        .avatar { width: 55px; height: 55px; background: linear-gradient(135deg, var(--button-color) 0%, #4a00e0 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: bold; color: #fff; }
+        .rank-badge { background: linear-gradient(90deg, #c0c0c0, #e6e6e6); color: #000; font-size: 10px; padding: 2px 6px; border-radius: 6px; font-weight: bold; margin-left: 5px; }
+        
+        .card { background-color: var(--secondary-bg); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.05); border-radius: 16px; padding: 15px; margin-bottom: 12px; }
+        .progress-bg { background: rgba(255,255,255,0.1); height: 8px; border-radius: 4px; overflow: hidden; margin-top: 10px; }
+        .progress-fill { background: var(--button-color); height: 100%; width: 0%; transition: 0.5s; box-shadow: 0 0 10px var(--accent); }
+
+        input[type="text"], input[type="password"], input[type="number"], textarea { width: 100%; padding: 14px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08); background: rgba(0,0,0,0.4); color: var(--text-color); margin-bottom: 12px; font-size: 14px; box-sizing: border-box; transition: 0.2s; font-family: inherit; }
+        input:focus, textarea:focus { outline: none; border-color: var(--accent); }
+        .main-btn { background: linear-gradient(135deg, var(--button-color) 0%, var(--accent) 100%); color: #fff; border: none; padding: 16px; border-radius: 14px; width: 100%; font-size: 16px; font-weight: bold; cursor: pointer; text-transform: uppercase; transition: 0.2s;}
+        .main-btn:active { transform: scale(0.96); }
+        .sec-btn { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 12px; border-radius: 12px; width: 100%; font-size: 14px; font-weight: bold; cursor: pointer; transition: 0.2s; margin-bottom: 10px;}
+
+        /* УВЕЛИЧЕННЫЕ КНОПКИ ПЛАТФОРМ */
+        .grid-cats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-top: 10px;}
+        .cat-card { background: rgba(28, 28, 30, 0.6); backdrop-filter: blur(10px); border-radius: 22px; padding: 30px 10px; text-align: center; border: 1px solid rgba(255,255,255,0.05); cursor: pointer; transition: 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+        .cat-card:active { transform: scale(0.94); background: rgba(255,255,255,0.08); }
+        .cat-card i { font-size: 45px; margin-bottom: 15px; color: var(--accent); filter: drop-shadow(0 0 10px var(--accent));}
+        .cat-title { font-weight: 700; font-size: 16px; color: #fff;}
+
+        /* МОДАЛКА СКРИПТОВ / ТЕМ */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
+        .modal-content { background: var(--bg-color); border: 1px solid var(--accent); border-radius: 20px; padding: 20px; width: 90%; max-height: 80vh; overflow-y: auto; text-align: center; }
+
+        .filters-scroll { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 15px; scrollbar-width: none; }
+        .filter-chip { padding: 6px 12px; background: var(--secondary-bg); border-radius: 20px; font-size: 12px; white-space: nowrap; cursor: pointer; border: 1px solid rgba(255,255,255,0.1); }
+        .filter-chip.active { background: var(--button-color); color: #fff; border-color: var(--button-color); }
+        
+        .health-dot { width: 8px; height: 8px; background: #34c759; border-radius: 50%; display: inline-block; margin-left: 5px; box-shadow: 0 0 5px #34c759; }
+        
+        .radio-list { background: rgba(0,0,0,0.2); border-radius: 16px; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 15px; }
+        .radio-item { display: flex; justify-content: space-between; align-items: center; padding: 14px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; }
+        .radio-item.active { background: rgba(255,255,255,0.05); }
+
+        .wheel-container { width: 250px; height: 250px; margin: 20px auto; position: relative; }
+        .wheel { width: 100%; height: 100%; border-radius: 50%; background: conic-gradient(var(--button-color) 0 60deg, var(--accent) 60deg 120deg, var(--button-color) 120deg 180deg, var(--accent) 180deg 240deg, var(--button-color) 240deg 300deg, var(--accent) 300deg 360deg); transition: transform 4s cubic-bezier(0.1, 0.8, 0.2, 1); border: 5px solid rgba(255,255,255,0.1); box-sizing: border-box; }
+        .wheel-pointer { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); font-size: 30px; z-index: 10; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }
+
+        .tap-coin { width: 180px; height: 180px; background: radial-gradient(circle, var(--button-color) 0%, var(--accent) 100%); border-radius: 50%; margin: 30px auto; display: flex; align-items: center; justify-content: center; font-size: 80px; box-shadow: 0 10px 30px rgba(184, 41, 255, 0.5), inset 0 -10px 20px rgba(0,0,0,0.3); transition: transform 0.05s; cursor: pointer; user-select: none; }
+        
+        .floating-cart { position: fixed; bottom: 80px; right: 20px; width: 55px; height: 55px; background: var(--button-color); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; color: white; box-shadow: 0 5px 15px rgba(184, 41, 255, 0.5); z-index: 99; cursor: pointer; }
+        .badge { position: absolute; top: 0; right: 0; background: #ff3b30; color: white; font-size: 10px; padding: 2px 6px; border-radius: 10px; border: 2px solid var(--bg-color); }
+        
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(10,0,18,0.95); border-top: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-around; padding: 12px 0 calc(12px + env(safe-area-inset-bottom)) 0; z-index: 100; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; color: #636366; font-size: 11px; font-weight: 600; gap: 5px; background: none; border: none; transition: 0.3s; }
+        .nav-item.active { color: var(--accent); }
+    </style>
+</head>
+<body>
+    <div class="watermark">ISMABOOST</div>
+    <div class="floating-cart" onclick="haptic(); switchMainTab('cart', document.getElementById('nav-cart'))"><i class="fas fa-shopping-cart"></i><span class="badge" id="cart-badge" style="display:none;">0</span></div>
+
+    <!-- ТЕМЫ ОФОРМЛЕНИЯ (МОДАЛКА) -->
+    <div class="modal-overlay" id="themes-modal">
+        <div class="modal-content">
+            <h2 style="margin-top:0;">🎨 Темы оформления</h2>
+            <p style="font-size: 13px; color: var(--hint-color);">Доступно за активность!</p>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 20px;">
+                <button class="sec-btn" onclick="setTheme('dark')">Dark</button>
+                <button class="sec-btn" onclick="setTheme('violet')">Violet</button>
+                <button class="sec-btn" onclick="setTheme('gold')">Gold</button>
+                <button class="sec-btn" onclick="setTheme('matrix')">Matrix</button>
+                <button class="sec-btn" onclick="setTheme('crimson')">Crimson</button>
+                <button class="sec-btn" onclick="setTheme('ocean')">Ocean</button>
+                <button class="sec-btn" onclick="setTheme('forest')">Forest</button>
+                <button class="sec-btn" onclick="setTheme('sunset')">Sunset</button>
+                <button class="sec-btn" onclick="setTheme('neon')">Neon</button>
+                <button class="sec-btn" onclick="setTheme('midnight')">Midnight</button>
+                <button class="sec-btn" onclick="setTheme('bubblegum')">Bubblegum</button>
+                <button class="sec-btn" onclick="setTheme('coffee')">Coffee</button>
+                <button class="sec-btn" onclick="setTheme('aqua')">Aqua</button>
+                <button class="sec-btn" onclick="setTheme('lava')">Lava</button>
+                <button class="sec-btn" onclick="setTheme('cyberpunk')">Cyberpunk</button>
+            </div>
+            <button class="main-btn" style="margin-top:15px;" onclick="document.getElementById('themes-modal').style.display='none'">ЗАКРЫТЬ</button>
+        </div>
+    </div>
+
+    <!-- АВТОВЫДАЧА СКРИПТА (МОДАЛКА) -->
+    <div class="modal-overlay" id="script-modal">
+        <div class="modal-content">
+            <h2 style="margin-top:0;">✅ Покупка успешна!</h2>
+            <p style="font-size: 13px; color: var(--hint-color);" id="script-desc"></p>
+            <textarea id="script-code" rows="5" readonly style="font-family: monospace; font-size: 12px;"></textarea>
+            <button class="main-btn" onclick="document.getElementById('script-modal').style.display='none'">СПАСИБО!</button>
+        </div>
+    </div>
+
+    <div id="tab-home" class="container active">
+        <div class="header">
+            <div class="avatar" id="avatar">I</div>
+            <div class="user-info">
+                <h1 id="username">Загрузка...</h1>
+                <p>ID: <span id="userid">...</span></p>
+            </div>
+        </div>
+        
+        <div class="card" style="background: linear-gradient(135deg, rgba(138,43,226,0.6), rgba(74,0,224,0.6)); border:none;">
+            <p style="margin:0; font-size:14px; opacity:0.9;">Ваш баланс (Из Бота)</p>
+            <h2 id="balance-val" style="margin: 5px 0 15px; font-size: 32px; font-weight: 800;">0.00 ₽</h2>
+            <button class="sec-btn" onclick="haptic(); closeAndCommand('/balance')" style="background: rgba(255,255,255,0.2); border:none; margin-bottom:0;">ПОПОЛНИТЬ</button>
+        </div>
+
+        <div class="card">
+            <h3 style="margin: 0 0 10px; font-size: 15px;"><i class="fas fa-tasks" style="color: var(--accent);"></i> Прогресс Тапалки</h3>
+            <div style="font-size: 13px; color: #e5e5ea; display:flex; justify-content: space-between; margin-bottom: 5px;">
+                <span>👆 Тапни 23777 раз</span> <span id="quest-tap">0 / 23777</span>
+            </div>
+            <div class="progress-bg"><div class="progress-fill" id="quest-tap-bar" style="width: 0%;"></div></div>
+        </div>
+
+        <div class="card">
+            <h3 style="margin: 0 0 10px; font-size: 15px;">Настройки Профиля</h3>
+            <button class="sec-btn" onclick="haptic(); openThemesMenu()">🎨 Темы оформления (15 шт)</button>
+            <button class="sec-btn" onclick="haptic(); tg.requestWriteAccess(); tg.showAlert('Уведомления включены!')" style="margin:0;">🔔 Push-уведомления</button>
+        </div>
+    </div>
+
+    <!-- ТАПАЛКА -->
+    <div id="tab-clicker" class="container">
+        <div class="page-header" style="justify-content: center; font-size: 24px;"><span>👆 Тапалка IsmaBoost</span></div>
+        <p style="text-align: center; color: var(--hint-color);">Набери 23 777 тапов, чтобы выполнить квест и получить 250 просмотров TikTok!</p>
+        <div class="tap-coin" id="tap-coin" onclick="doTap()">💎</div>
+        <h2 style="text-align: center; font-size: 32px;" id="tap-score">0</h2>
+    </div>
+
+    <!-- КОЛЕСО ФОРТУНЫ -->
+    <div id="tab-wheel" class="container">
+        <div class="page-header" style="justify-content: center; font-size: 24px;"><span>🎡 Колесо Фортуны</span></div>
+        <p style="text-align: center; color: var(--hint-color);">Испытай удачу за 150 ₽! Главный приз: 1000 подписчиков или 100 звёзд.</p>
+        
+        <div class="wheel-container">
+            <div class="wheel-pointer">▼</div>
+            <div class="wheel" id="wheel-inner"></div>
+        </div>
+        <button class="main-btn" onclick="spinWheel()">КРУТИТЬ ЗА 150 ₽</button>
+    </div>
+    <!-- КОРЗИНА -->
+    <div id="tab-cart" class="container">
+        <div class="page-header"><span>🛒 Ваша Корзина</span></div>
+        <div id="cart-content"></div>
+        <div class="card" style="margin-top: 15px;">
+            <input type="text" id="promo-input" placeholder="Промокод (ISMA10)" style="text-transform: uppercase;">
+        </div>
+        <h2 style="text-align: center;" id="cart-total-price">0.00 ₽</h2>
+        <button class="main-btn" onclick="haptic('heavy'); checkoutCart()">ОПЛАТИТЬ</button>
+    </div>
+
+    <!-- НАКРУТКА -->
+    <div id="tab-social" class="container">
+        <div class="card" style="background: linear-gradient(45deg, #ff3b30, #ff9500); border:none; text-align: center; padding: 10px;">
+            <b style="color:white; font-size:14px;">🔥 Скидка 40% на Telegram Просмотры! Сгорит через: <span id="flash-timer">02:14:59</span></b>
+        </div>
+        
+        <div class="filters-scroll">
+            <div class="filter-chip active" onclick="haptic('light'); filterPlats('all', this)">Все</div>
+            <div class="filter-chip" onclick="haptic('light'); filterPlats('subs', this)">Подписчики</div>
+            <div class="filter-chip" onclick="haptic('light'); filterPlats('likes', this)">Лайки</div>
+            <div class="filter-chip" onclick="haptic('light'); filterPlats('views', this)">Просмотры</div>
+        </div>
+        
+        <div class="grid-cats" id="social-platforms-grid"></div>
+    </div>
+
+    <!-- ЭКРАН ЗАКАЗА (ПЛАТНЫЙ И БЕСПЛАТНЫЙ РЕЖИМ) -->
+    <div id="screen-social-order" class="container">
+        <div class="page-header">
+            <button class="back-btn" onclick="haptic(); goBack('social')"><i class="fas fa-chevron-left"></i></button>
+            <span id="social-platform-title">Telegram</span>
+        </div>
+        
+        <div class="card" style="padding: 0; background: none; border: none;">
+            <div style="display:flex; justify-content: space-between; margin: 0 15px 10px; font-size:13px;" id="mass-wrap">
+                <span>Массовый заказ (Опт):</span>
+                <input type="checkbox" id="mass-toggle" onchange="haptic(); toggleMassOrder()">
+            </div>
+
+            <div id="social-list-container"></div> 
+            
+            <input type="text" id="social-link" placeholder="Вставьте ссылку..." oninput="checkSmartPaste()">
+            <textarea id="social-mass-link" rows="4" placeholder="https://t.me/post1 1000&#10;https://t.me/post2 500" style="display:none;"></textarea>
+
+            <div class="card" id="ai-block" style="display:none; border: 1px solid #34c759; background: rgba(52, 199, 89, 0.1);">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <img id="ai-avatar" src="" style="width:40px; height:40px; border-radius:50%;">
+                    <div style="font-size:12px;"><b style="color:#34c759;">🤖 AI-Анализ профиля:</b><br><span id="ai-text">Контент отличный! Для выхода в тренды рекомендуем добавить лайки.</span></div>
+                </div>
+            </div>
+            
+            <label style="margin-left: 15px;" id="qty-label">Количество:</label>
+            <div style="display:flex; gap:10px; margin-bottom:15px;" id="qty-wrap">
+                <input type="number" id="social-qty" value="25" oninput="updateSocialCalc()" style="margin:0; width:100%;">
+            </div>
+            
+            <h2 style="text-align: center; margin: 10px 0;" id="social-total-price">0.00 ₽</h2>
+            <button class="sec-btn" id="cart-btn-hide" onclick="addToCart()">В КОРЗИНУ</button>
+            <button class="main-btn" id="order-main-btn" onclick="haptic('heavy'); sendSocialOrder()">ОФОРМИТЬ</button>
+        </div>
+    </div>
+
+    <!-- ИГРЫ, P2P, СКРИПТЫ -->
+    <div id="tab-games" class="container">
+        <div class="filters-scroll">
+            <div class="filter-chip active" onclick="haptic(); switchGameTab('donat')">Донат</div>
+            <div class="filter-chip" onclick="haptic(); switchGameTab('p2p')">P2P Биржа</div>
+            <div class="filter-chip" onclick="haptic(); switchGameTab('scripts')">Скрипты/Ключи</div>
+        </div>
+
+        <div id="g-donat" class="grid-cats">
+            <div class="cat-card" onclick="openGame('pubg')"><i class="fas fa-crosshairs"></i><div class="cat-title">PUBG UC</div></div>
+            <div class="cat-card" onclick="openGame('brawl')"><i class="fas fa-star"></i><div class="cat-title">Brawl Stars</div></div>
+            <div class="cat-card" onclick="openGame('roblox')"><i class="fas fa-cube"></i><div class="cat-title">Roblox</div></div>
+            <div class="cat-card" onclick="openGame('br')"><i class="fas fa-car"></i><div class="cat-title">Black Russia</div></div>
+            <div class="cat-card" onclick="openGame('pubg_carry')"><i class="fas fa-medal"></i><div class="cat-title">PUBG Сопровод</div></div>
+            <div class="cat-card" onclick="openGame('metro')"><i class="fas fa-radiation"></i><div class="cat-title">Metro Сопровод</div></div>
+        </div>
+
+        <div id="g-p2p" style="display:none;">
+            <div class="card">
+                <h3>🌲 Скупка Голды (Standoff)</h3>
+                <p style="font-size:12px; color:var(--hint-color);">Живой график курса (₽ за 1 голду)</p>
+                <div class="chart-container">
+                    <svg viewBox="0 0 100 30" style="width:100%; height:100%;">
+                        <path class="chart-line" d="M0,25 L10,20 L20,22 L30,15 L40,18 L50,10 L60,12 L70,5 L80,8 L90,2 L100,5" />
+                    </svg>
+                    <div style="position:absolute; right:0; top:0; background:rgba(52,199,89,0.2); color:#34c759; padding:2px 6px; border-radius:4px; font-size:12px; font-weight:bold;">0.45 ₽</div>
+                </div>
+                <input type="number" placeholder="Сколько голды продаете?">
+                <button class="main-btn" onclick="tg.openTelegramLink('https://t.me/ismaboy014')">ПРОДАТЬ</button>
+            </div>
+        </div>
+
+        <div id="g-scripts" style="display:none;">
+            <div class="card" onclick="buyScript('roblox_noclip')">
+                <b>🟥 Roblox Noclip Script</b> <span class="health-dot"></span><br>
+                <span style="font-size:12px; color:var(--hint-color);">Автовыдача кода • 24.79 ₽</span>
+            </div>
+        </div>
+    </div>
+    
+    <div id="screen-game-order" class="container">
+        <div class="page-header"><button class="back-btn" onclick="haptic(); goBack('games')"><i class="fas fa-chevron-left"></i></button><span id="game-title"></span></div>
+        <div id="game-form-container"></div>
+    </div>
+
+    <!-- НАВИГАЦИЯ -->
+    <div class="bottom-nav">
+        <button class="nav-item active" onclick="haptic(); switchMainTab('home', this)"><i class="fas fa-user"></i> <span data-i18n="nav_prof">Профиль</span></button>
+        <button class="nav-item" onclick="haptic(); switchMainTab('social', this)"><i class="fas fa-rocket"></i> <span data-i18n="nav_soc">Накрутка</span></button>
+        <button class="nav-item" onclick="haptic(); switchMainTab('games', this)"><i class="fas fa-gamepad"></i> <span data-i18n="nav_games">Игры/P2P</span></button>
+        <button class="nav-item" onclick="haptic(); switchMainTab('clicker', this)"><i class="fas fa-hand-pointer"></i> Тапалка</button>
+        <button class="nav-item" id="nav-cart" onclick="haptic(); switchMainTab('wheel', this)"><i class="fas fa-dharmachakra"></i> Рулетка</button>
+    </div>
+    <script>
+        let tg = window.Telegram.WebApp;
+        tg.expand(); tg.ready();
+
+        function haptic(s = 'light') { if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred(s); }
+
+        // ПАРСИМ ДАННЫЕ ИЗ URL (От Python Бота)
+        const urlParams = new URLSearchParams(window.location.search);
+        let userBal = parseFloat(urlParams.get('bal')) || 0.00;
+        let userOrders = parseInt(urlParams.get('orders')) || 0;
+        let isFreeOrderMode = false;
+        let freeOrderData = null;
+
+        if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+            document.getElementById('username').innerText = tg.initDataUnsafe.user.first_name;
+            document.getElementById('avatar').innerText = tg.initDataUnsafe.user.first_name.charAt(0).toUpperCase();
+            document.getElementById('userid').innerText = tg.initDataUnsafe.user.id;
+        }
+        document.getElementById('balance-val').innerText = userBal.toFixed(2) + ' ₽';
+
+        // 15 ТЕМ: Проверка на 5 заказов
+        function openThemesMenu() {
+            if(userOrders < 5) {
+                tg.showAlert(`У вас ${userOrders} заказов. Сделайте еще ${5 - userOrders}, чтобы разблокировать 15 эксклюзивных тем!`);
+                return;
+            }
+            document.getElementById('themes-modal').style.display = 'flex';
+        }
+        function setTheme(t) { document.documentElement.setAttribute('data-theme', t); }
+
+        // БАЗА УСЛУГ (Обновлены иконки)
+        const SOCIAL_DATA = {
+            telegram: { title: "Telegram", icon: "fab fa-telegram", color: "#0088cc", items: [
+                {id: "tg_stars", name: "🌟 Звёзды (на аккаунт)", desc: "⚡ Быстро\n🌟 Мин. 100 шт\n🔗 https://t.me/username\n💰 205₽/100 шт", price: 205, pack: 100, min: 100, max: 10000},
+                {id: "tg_subs", name: "✅Подписчики Без Списание💎", desc: "♾️ Навсегда без списаний 🛡️\n⚡ Моментальные 🚀\n✨ СТАРТ: 0 – 10 минут ⏱️\n📉 Списания: 0% ❌\n♻️ Гарантия: НАВСЕГДА 🛡️", price: 114.99, pack: 1000, min: 25, max: 20000},
+                {id: "tg_views", name: "⚡️ Просмотры", desc: "🚀 До 200к/сутки\n💰 14.99₽/1к", price: 14.99, pack: 1000, min: 25, max: 100000},
+                {id: "tg_bot_start", name: "🤖 Запуск Бота", desc: "🚀 100к/день\n💰 24.99₽/1к", price: 24.99, pack: 1000, min: 25, max: 50000},
+                {id: "tg_react_pos", name: "🚀 Реакции 👍🔥❤️", desc: "🎭 Микс позитивных\n💰 15.70₽/1к", price: 15.70, pack: 1000, min: 25, max: 10000},
+                {id: "tg_react_neg", name: "👎 Реакции 🖕💩", desc: "🎭 Микс негативных\n💰 15.70₽/1к", price: 15.70, pack: 1000, min: 25, max: 10000},
+                {id: "tg_report_user_fraud", name: "🚨 Жалоба на пользователя [Мошенничество]", desc: "⚡ Быстро\n💰 420₽/1к", price: 420, pack: 1000, min: 1000, max: 10000},
+                {id: "tg_report_user_spam", name: "🚨 Жалоба на пользователя [Спам]", desc: "⚡ Быстро\n💰 420₽/1к", price: 420, pack: 1000, min: 1000, max: 10000},
+                {id: "tg_report_channel_fraud", name: "🚨 Жалобы на канал [Мошенничество]", desc: "⚡ Быстро\n💰 420₽/1к", price: 420, pack: 1000, min: 1000, max: 10000},
+                {id: "tg_report_channel_spam", name: "🚨 Жалобы на канал [Спам]", desc: "⚡ Быстро\n💰 420₽/1к", price: 420, pack: 1000, min: 1000, max: 10000},
+                {id: "tg_report_bot_fraud", name: "🚨 Жалоба на бота [Мошенничество]", desc: "⚡ Быстро\n💰 420₽/1к", price: 420, pack: 1000, min: 1000, max: 10000},
+                {id: "tg_report_bot_spam", name: "🚨 Жалоба на бота [Спам]", desc: "🐢 Медленно\n💰 420₽/1к", price: 420, pack: 1000, min: 1000, max: 10000}
+            ]},
+            tiktok: { title: "TikTok", icon: "fab fa-tiktok", color: "#ff0050", items: [
+                {id: "tt_subs", name: "💫 Подписчики ♻️ 30д", desc: "♻️ 30 дней\n💰 651₽/1к", price: 651, pack: 1000, min: 25, max: 10000},
+                {id: "tt_views", name: "💎 Просмотры ♻️ 30д", desc: "♻️ 30 дней\n💰 24.99₽/1к", price: 24.99, pack: 1000, min: 1000, max: 100000},
+                {id: "tt_likes_twiboost", name: "❤️ TikTok Лайки ♻️", desc: "♻️ Без списаний🚀\n🕒 Запуск: 15 мин\n🔄 Отмена: возможна\n👥 Люди + боты\n🌍 Медленная скорость\n💰 379.99₽/1к", price: 379.99, pack: 1000, min: 25, max: 20000},
+                {id: "tt_saves", name: "🌟 Сохранения ♻️", desc: "♻️ 30 дней\n💰 14.99₽/1к", price: 14.99, pack: 1000, min: 25, max: 20000},
+                {id: "tt_reposts", name: "🔁 TikTok Репосты [Быстрые] [Гарантия 30 дней ♻️]", desc: "♻️ Гарантия 30 дней\n⚡ Быстрый старт\n🚀 До 10 млн/сутки\n💰 45.93₽/1к", price: 45.93, pack: 1000, min: 25, max: 20000}
+            ]},
+            youtube: { title: "YouTube", icon: "fab fa-youtube", color: "#ff0000", items: [
+                {id: "yt_subs", name: "👥 Подписчики ♻️", desc: "♻️ 30 дней\n💰 3502₽/1к", price: 3502, pack: 1000, min: 25, max: 5000},
+                {id: "yt_views", name: "👀 Просмотры ♻️", desc: "♻️ 30 дней\n💰 164₽/1к", price: 164, pack: 1000, min: 1000, max: 50000},
+                {id: "yt_likes", name: "❤️ Лайки ♻️", desc: "♻️ 30 дней\n💰 529₽/1к", price: 529, pack: 1000, min: 25, max: 10000}
+            ]},
+            instagram: { title: "Instagram", icon: "fab fa-instagram", color: "#e84393", items: [
+                {id: "ig_subs", name: "👥 Подписчики ♻️", desc: "♻️ 30 дней\n💰 437₽/1к", price: 437, pack: 1000, min: 25, max: 10000},
+                {id: "ig_likes", name: "❤️ Instagram Лайки (365 дней)", desc: "✅ Без списаний\n♻️ Гарантия 365 дней\n⚡ Быстрый старт\n👥 Качественные аккаунты\n💰 89₽/1к", price: 89, pack: 1000, min: 25, max: 20000},
+                {id: "ig_views", name: "👁 Просмотры", desc: "🚀 Reels\n💰 19.99₽/1к", price: 19.99, pack: 1000, min: 1000, max: 100000},
+                {id: "ig_reach", name: "📊 Охват+Показы", desc: "📈 Плавные\n💰 13₽/1к", price: 13, pack: 1000, min: 25, max: 20000},
+                {id: "ig_saves", name: "💾 Сохранения", desc: "🚀 Быстро\n💰 8₽/1к", price: 8, pack: 1000, min: 25, max: 10000},
+                {id: "ig_reposts", name: "🔄 Репосты", desc: "🔗 Все ссылки\n💰 4₽/1к", price: 4, pack: 1000, min: 25, max: 10000}
+            ]},
+            vk: { title: "ВКонтакте", icon: "fab fa-vk", color: "#0077ff", items: [
+                {id: "vk_subs", name: "👥 Подписчики ⛔", desc: "⚠️ Без гарантии\n💰 63₽/1к", price: 63, pack: 1000, min: 25, max: 10000},
+                {id: "vk_likes", name: "❤️ Лайки ♻️", desc: "♻️ 30 дней\n💰 38₽/1к", price: 38, pack: 1000, min: 25, max: 10000},
+                {id: "vk_views", name: "👀 Просмотры", desc: "🌟 Лучшая цена\n💰 1₽/1к", price: 1, pack: 1000, min: 1000, max: 100000},
+                {id: "vk_reposts", name: "🔁 Репосты РУ", desc: "👥 РУ имена\n💰 221₽/1к", price: 221, pack: 1000, min: 25, max: 10000}
+            ]},
+            twitch: { title: "Twitch", icon: "fab fa-twitch", color: "#9146ff", items: [
+                {id: "tw_subs", name: "👥 Подписчики ♻️", desc: "♻️ 30 дней\n💰 21₽/1к", price: 21, pack: 1000, min: 25, max: 10000},
+                {id: "tw_views", name: "👀 Просмотры", desc: "🎥 Качество\n💰 25₽/1к", price: 25, pack: 1000, min: 1000, max: 50000},
+                {id: "tw_viewers", name: "👥 Зрители эфира", desc: "⏱ 15 мин\n💰 60₽/1к", price: 60, pack: 1000, min: 25, max: 10000}
+            ]},
+            twitter: { title: "Twitter", icon: "fab fa-twitter", color: "#1da1f2", items: [
+                {id: "twt_subs", name: "👥 Подписчики ⛔", desc: "⚠️ Без гарантии\n💰 211₽/1к", price: 211, pack: 1000, min: 25, max: 5000},
+                {id: "twt_likes", name: "❤️ Лайки ♻️", desc: "♻️ 30 дней\n💰 561₽/1к", price: 561, pack: 1000, min: 25, max: 5000},
+                {id: "twt_views", name: "👀 Просмотры ♻️365", desc: "♻️ 365 дней\n💰 3₽/1к", price: 3, pack: 1000, min: 1000, max: 50000}
+            ]},
+            likee: { title: "Likee", icon: "fas fa-heart", color: "#ff4757", items: [
+                {id: "lk_subs", name: "👥 Подписчики [Реальные]", desc: "👥 Реальные\n💰 512₽/1к", price: 512, pack: 1000, min: 25, max: 10000},
+                {id: "lk_likes", name: "❤️ Лайки [Реальные]", desc: "❤️ Реальные\n💰 258₽/1к", price: 258, pack: 1000, min: 25, max: 10000}
+            ]},
+            facebook: { title: "Facebook", icon: "fab fa-facebook", color: "#1877f2", items: [
+                {id: "fb_subs", name: "👥 Подписчики ♻️", desc: "♻️ 30 дней\n💰 70₽/1к", price: 70, pack: 1000, min: 25, max: 10000}
+            ]},
+            rutube: { title: "Rutube", icon: "fas fa-play", color: "#2ed573", items: [
+                {id: "rt_views1", name: "👀 Просмотры реал.", desc: "🇷🇺 ГЕО РФ\n💰 94₽/1к", price: 94, pack: 1000, min: 1000, max: 50000},
+                {id: "rt_views2", name: "👀 Просмотры мгнов.", desc: "⚡ Мгновенно\n💰 24₽/1к", price: 24, pack: 1000, min: 1000, max: 50000},
+                {id: "rt_emojis", name: "😍 Эмоции ♻️", desc: "♻️ 30 дней\n💰 211₽/1к", price: 211, pack: 1000, min: 25, max: 5000},
+                {id: "rt_likes", name: "❤️ Лайки В топ ♻️", desc: "♻️ 30 дней\n💰 702₽/1к", price: 702, pack: 1000, min: 25, max: 5000}
+            ]},
+            max: { title: "MAX", icon: "fas fa-cube", color: "#54a0ff", items: [
+                {id: "mx_subs", name: "👥 Подписчики", desc: "🇷🇺 РФ/СНГ\n💰 3395₽/1к", price: 3395, pack: 1000, min: 25, max: 5000},
+                {id: "mx_views", name: "👀 Просмотры", desc: "👥 Живые\n💰 1423₽/1к", price: 1423, pack: 1000, min: 1000, max: 50000},
+                {id: "mx_reposts", name: "🔁 Репосты", desc: "⚡ Быстро\n💰 525₽/1к", price: 525, pack: 1000, min: 25, max: 5000},
+                {id: "mx_bot_start", name: "🤖 Запуск бота", desc: "⚡ Мгновенно\n💰 3987₽/1к", price: 3987, pack: 1000, min: 25, max: 5000}
+            ]}
+        };
+        const GAMES_DATA = {
+            pubg: { title: "🔫 PUBG Mobile (UC)", type: "options", inputs: [{id: "g_id", label: "ID игрока"}], options: [ {n: "60 UC", p: 112}, {n: "325 UC", p: 478}, {n: "660 UC", p: 929}, {n: "985 UC", p: 1500}, {n: "1320 UC", p: 1975}, {n: "1800 UC", p: 2411}, {n: "2460 UC", p: 3398}, {n: "2850 UC", p: 1722} ]},
+            brawl: { title: "⭐ Brawl Stars", type: "options", inputs: [{id: "g_id", label: "Supercell ID (Почта)"}], options: [ {n: "Black Pass", p: 1194}, {n: "Brawl Pass Plus", p: 1574}, {n: "Pro Pass", p: 3106} ]},
+            roblox: { title: "🟥 Roblox (Robux)", type: "options", inputs: [{id: "g_log", label: "Логин"}, {id: "g_pass", label: "Пароль (Отключите 2FA)"}], options: [ {n: "80 Robux (РФ)", p: 127}, {n: "500 Robux (РФ)", p: 763}, {n: "600 Robux (РФ)", p: 912}, {n: "800 Robux (РФ)", p: 1015}, {n: "1000 Robux (США)", p: 1148}, {n: "1500 Robux (США)", p: 1489}, {n: "1200 Robux (РФ)", p: 1772}, {n: "1500 Robux (РФ)", p: 1899} ]},
+            br: { title: "🚗 Black Russia (Коины)", type: "slider", min: 10, max: 5000, step: 1, ppu: 1.50, inputs: [{id: "g_serv", label: "Сервер"}, {id: "g_nick", label: "Никнейм"}] },
+            cp: { title: "🅿️ Car Parking 2 (Аккаунты)", type: "slider_special", min: 1, max: 31, step: 1, inputs: [] },
+            pubg_carry: { title: "🏆 PUBG Сопровождение", type: "fixed", price: 249, desc: "🏆 GOLD СОПРОВОЖДЕНИЕ | ELITE 8 🏆\n\n🎒 СТАРТОВЫЙ НАБОР:\n• Фулл 6 сет\n• Освинцованная ткань\n• Два ремня 🎗️\n• МК14 (высшая) + фулл обвесы\n\n💰 ГАРАНТИЯ ВЫНОСА:\n• ☢️ С радиации: от 9кк до 15кк\n• 👥 С людей: от 10 до 15 пушек" },
+            metro: { title: "👑 Metro (Сопровождение)", type: "fixed", price: 149, desc: "👑 IsmaShop — Metro\n\n🔥 СОПРОВОД — 12 ЛЯМ РАДИКА\n💰 ВСЕГО 149 ₽\n\n⚡ Быстро • Чётко • Без лишнего" }
+        };
+
+        let isEn = false;
+        function toggleLang() { 
+            isEn = !isEn; document.getElementById('user-lang').innerText = isEn ? '🇬🇧 EN' : '🇷🇺 RU'; 
+            document.querySelector('[data-i18n="nav_prof"]').innerText = isEn ? 'Profile' : 'Профиль';
+            document.querySelector('[data-i18n="nav_soc"]').innerText = isEn ? 'Social' : 'Накрутка';
+            document.querySelector('[data-i18n="nav_games"]').innerText = isEn ? 'Games' : 'Игры/P2P';
+        }
+
+        // ТАПАЛКА С ЛОКАЛЬНЫМ ХРАНЕНИЕМ
+        let taps = parseInt(localStorage.getItem('isma_taps_v2')) || 0; 
+        const MAX_TAPS = 23777;
+        
+        document.getElementById('tap-score').innerText = taps;
+        document.getElementById('quest-tap').innerText = `${taps} / ${MAX_TAPS}`;
+        document.getElementById('quest-tap-bar').style.width = (taps/MAX_TAPS*100) + '%';
+
+        function doTap() {
+            if(taps >= MAX_TAPS) return;
+            taps++; 
+            localStorage.setItem('isma_taps_v2', taps);
+            haptic('light');
+            document.getElementById('tap-score').innerText = taps;
+            document.getElementById('quest-tap').innerText = `${taps} / ${MAX_TAPS}`;
+            document.getElementById('quest-tap-bar').style.width = (taps/MAX_TAPS*100) + '%';
+            
+            let coin = document.getElementById('tap-coin');
+            coin.style.transform = 'scale(0.9)';
+            setTimeout(() => coin.style.transform = 'scale(1)', 50);
+
+            if(taps === MAX_TAPS) {
+                triggerConfetti(); tg.showAlert('🎉 Квест выполнен! Вы получаете 250 просмотров TikTok!');
+                openFreeOrder('tiktok', 'tt_views', 250);
+            }
+        }
+
+        // ПОКУПКА СКРИПТА ROBLOX (АВТОВЫДАЧА)
+        function buyScript(id) {
+            if(id === 'roblox_noclip') {
+                let price = 24.79;
+                if(userBal < price) { tg.showAlert('❌ Недостаточно средств на балансе!'); return; }
+                
+                let scriptCode = `loadstring(game:HttpGet("https://pastebin.com/raw/2JZWpiKn", true))()`;
+                let desc = `Этот скрипт может проходить сквозь стены!\n\nСодержит:\n-Переключение режима Noclip\n-Свертывание\n-Развертывание\n-Закрытие\n-Перемещаемый графический интерфейс!`;
+                
+                document.getElementById('script-desc').innerText = desc;
+                document.getElementById('script-code').value = scriptCode;
+                document.getElementById('script-modal').style.display = 'flex';
+                triggerConfetti();
+                
+                tg.sendData(JSON.stringify({action: "buy_script", price: price, name: "Roblox Noclip"}));
+            }
+        }
+        // РУЛЕТКА И ВСЕ ПРИЗЫ
+        const roulettePrizes = [
+            {name: "💀 Пусто...", weight: 20, plat: null, key: null, qty: 0},
+            {name: "👀 1000 просмотров TikTok", weight: 10, plat: "tiktok", key: "tt_views", qty: 1000},
+            {name: "❤️ 100 лайков Instagram", weight: 8, plat: "instagram", key: "ig_likes", qty: 100},
+            {name: "👀 5000 просмотров Instagram", weight: 6, plat: "instagram", key: "ig_views", qty: 5000},
+            {name: "❤️ 500 лайков TikTok", weight: 5, plat: "tiktok", key: "tt_likes_twiboost", qty: 500},
+            {name: "💾 500 сохранений TikTok", weight: 5, plat: "tiktok", key: "tt_saves", qty: 500},
+            {name: "🔁 500 репостов TikTok", weight: 4, plat: "tiktok", key: "tt_reposts", qty: 500},
+            {name: "👀 5000 просмотров YouTube", weight: 4, plat: "youtube", key: "yt_views", qty: 5000},
+            {name: "👀 5000 просмотров ВК", weight: 4, plat: "vk", key: "vk_views", qty: 5000},
+            {name: "👀 5000 просмотров Rutube", weight: 3, plat: "rutube", key: "rt_views2", qty: 5000},
+            {name: "👥 500 подписчиков Telegram", weight: 4, plat: "telegram", key: "tg_subs", qty: 500},
+            {name: "👀 10000 просмотров Telegram", weight: 4, plat: "telegram", key: "tg_views", qty: 10000},
+            {name: "🚀 5000 запусков бота TG", weight: 3, plat: "telegram", key: "tg_bot_start", qty: 5000},
+            {name: "🚀 500 позитивных реакций TG", weight: 3, plat: "telegram", key: "tg_react_pos", qty: 500},
+            {name: "❤️ 500 лайков YouTube", weight: 2, plat: "youtube", key: "yt_likes", qty: 500},
+            {name: "👥 500 подписчиков TikTok", weight: 2, plat: "tiktok", key: "tt_subs", qty: 500},
+            {name: "📊 5000 охвата Instagram", weight: 2, plat: "instagram", key: "ig_reach", qty: 5000},
+            {name: "🌟 100 звёзд TG (ДЖЕКПОТ!)", weight: 2, plat: "telegram", key: "tg_stars", qty: 100},
+            {name: "👑 1000 подписчиков TG (ДЖЕКПОТ!)", weight: 1, plat: "telegram", key: "tg_subs", qty: 1000}
+        ];
+
+        let wheelDeg = 0; let isSpinning = false;
+        function spinWheel() {
+            if(isSpinning) return;
+            if(userBal < 150) { tg.showAlert('❌ Недостаточно средств!'); return; }
+            
+            isSpinning = true; haptic('heavy');
+            
+            let totalWeight = roulettePrizes.reduce((sum, p) => sum + p.weight, 0);
+            let randomNum = Math.random() * totalWeight;
+            let selectedPrize = roulettePrizes[0];
+            
+            for(let i=0; i<roulettePrizes.length; i++) {
+                if(randomNum < roulettePrizes[i].weight) { selectedPrize = roulettePrizes[i]; break; }
+                randomNum -= roulettePrizes[i].weight;
+            }
+
+            wheelDeg += 360 * 5 + Math.floor(Math.random() * 360);
+            document.getElementById('wheel-inner').style.transform = `rotate(${wheelDeg}deg)`;
+            
+            tg.sendData(JSON.stringify({action: "charge_wheel", price: 150}));
+            
+            setTimeout(() => { 
+                isSpinning = false;
+                if(selectedPrize.plat) {
+                    triggerConfetti(); 
+                    openFreeOrder(selectedPrize.plat, selectedPrize.key, selectedPrize.qty);
+                } else {
+                    tg.showAlert('💀 ' + selectedPrize.name + '\nВ следующий раз повезёт!'); 
+                }
+            }, 4000);
+        }
+
+        // БЕСПЛАТНЫЙ ЗАКАЗ
+        function openFreeOrder(plat, key, qty) {
+            isFreeOrderMode = true;
+            freeOrderData = { plat: plat, key: key, qty: qty };
+            
+            document.getElementById('social-platform-title').innerText = "🎁 БЕСПЛАТНЫЙ ПРИЗ";
+            
+            let item = SOCIAL_DATA[plat].items.find(i => i.id === key) || SOCIAL_DATA[plat].items[0];
+            
+            let html = `
+                <div class="radio-list">
+                    <div class="radio-item active">
+                        <div class="radio-content">
+                            <div class="radio-text">${item.name}</div>
+                            <div class="radio-desc">Выиграно в мини-игре!</div>
+                            <div class="radio-price" style="color:var(--accent);">0.00 ₽ за ${qty} шт.</div>
+                        </div>
+                        <div class="radio-circle" style="border-color: var(--accent); background: var(--accent);"></div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('social-list-container').innerHTML = html;
+            
+            document.getElementById('qty-wrap').style.display = 'none';
+            document.getElementById('qty-label').style.display = 'none';
+            document.getElementById('mass-wrap').style.display = 'none';
+            document.getElementById('cart-btn-hide').style.display = 'none';
+            
+            document.getElementById('social-total-price').innerText = '0.00 ₽';
+            document.getElementById('order-main-btn').innerText = 'ВВЕСТИ ССЫЛКУ И ОПЛАТИТЬ ЗА 0₽';
+            
+            document.querySelectorAll('.container').forEach(c => c.classList.remove('active'));
+            document.getElementById('screen-social-order').classList.add('active');
+        }
+
+        function triggerConfetti() {
+            haptic('heavy');
+            for(let i=0; i<30; i++){
+                let el = document.createElement('div');
+                el.innerText = ['🎉','💎','🚀','🔥'][Math.floor(Math.random()*4)];
+                el.style.cssText = `position:fixed; left:${Math.random()*100}%; top:-10%; font-size:24px; transition: 2s cubic-bezier(0.25, 0.46, 0.45, 0.94); z-index:9999;`;
+                document.body.appendChild(el);
+                setTimeout(()=> { el.style.top = '120%'; el.style.transform = `rotate(${Math.random()*360}deg) translateX(${Math.random()*100-50}px)`; }, 50);
+                setTimeout(()=> el.remove(), 2050);
+            }
+        }
+
+        // ФИЛЬТРЫ ПЛАТФОРМ
+        function filterPlats(type, el) {
+            document.querySelectorAll('.filters-scroll .filter-chip').forEach(c => c.classList.remove('active'));
+            if(el) el.classList.add('active');
+            
+            let socGrid = document.getElementById('social-platforms-grid');
+            socGrid.innerHTML = '';
+            for (let key in SOCIAL_DATA) {
+                let p = SOCIAL_DATA[key];
+                let hasMatch = false;
+                if (type === 'all') {
+                    hasMatch = true;
+                } else {
+                    p.items.forEach(it => {
+                        let n = it.name.toLowerCase();
+                        let id = it.id.toLowerCase();
+                        if (type === 'subs' && (n.includes('подпис') || id.includes('sub'))) hasMatch = true;
+                        if (type === 'likes' && (n.includes('лайк') || id.includes('like') || n.includes('реакц') || n.includes('эмоц'))) hasMatch = true;
+                        if (type === 'views' && (n.includes('просмотр') || id.includes('view') || n.includes('охват'))) hasMatch = true;
+                    });
+                }
+                if (hasMatch) {
+                    socGrid.innerHTML += `<div class="cat-card" onclick="haptic(); openSocialPlatform('${key}')"><i class="${p.icon}" style="color:${p.color}"></i><div class="cat-title">${p.title}</div></div>`;
+                }
+            }
+        }
+        
+        filterPlats('all', document.querySelector('.filters-scroll .filter-chip.active'));
+        // ОПТ И УМНАЯ ВСТАВКА
+        function toggleMassOrder() {
+            let isMass = document.getElementById('mass-toggle').checked;
+            document.getElementById('social-link').style.display = isMass ? 'none' : 'block';
+            document.getElementById('social-mass-link').style.display = isMass ? 'block' : 'none';
+        }
+
+        function checkSmartPaste() {
+            let v = document.getElementById('social-link').value;
+            let aiBlock = document.getElementById('ai-block');
+            if(v.includes('tiktok.com')) {
+                aiBlock.style.display = 'block';
+                document.getElementById('ai-avatar').src = 'https://ui-avatars.com/api/?name=TikTok&background=random';
+                document.getElementById('ai-text').innerText = 'Контент отличный! Для выхода в тренды рекомендуем добавить 500 лайков.';
+            } else if(v.includes('t.me')) {
+                aiBlock.style.display = 'block';
+                document.getElementById('ai-avatar').src = 'https://ui-avatars.com/api/?name=TG&background=0088cc&color=fff';
+                document.getElementById('ai-text').innerText = 'Канал найден. Добавьте 1000 просмотров для повышения лояльности.';
+            } else { aiBlock.style.display = 'none'; }
+        }
+
+        // КОРЗИНА
+        let cartItems = [];
+        function addToCart() {
+            haptic('medium');
+            let item = SOCIAL_DATA[currentPlat].items[currentSocialIndex];
+            let qty = parseInt(document.getElementById('social-qty').value);
+            cartItems.push({ name: item.name, qty: qty, price: (item.price/item.pack)*qty });
+            tg.showAlert("✅ Добавлено в корзину!");
+            document.getElementById('cart-badge').style.display = 'block';
+            document.getElementById('cart-badge').innerText = cartItems.length;
+            renderCart(); goBack('social');
+        }
+
+        function renderCart() {
+            let html = ''; let sum = 0;
+            if(cartItems.length === 0) { document.getElementById('cart-content').innerHTML = '<p style="text-align:center;color:gray;">Пусто</p>'; return; }
+            cartItems.forEach((it, i) => {
+                sum += it.price;
+                html += `<div class="card" style="display:flex; justify-content:space-between; align-items:center;">
+                    <div><b>${it.name}</b><br><span style="font-size:12px; color:gray;">${it.qty} шт</span></div>
+                    <div style="color:var(--accent); font-weight:bold;">${it.price.toFixed(2)} ₽</div>
+                </div>`;
+            });
+            document.getElementById('cart-content').innerHTML = html;
+            document.getElementById('cart-total-price').innerText = sum.toFixed(2) + ' ₽';
+        }
+
+        function checkoutCart() { triggerConfetti(); tg.showAlert("✅ Корзина оплачена!"); cartItems = []; renderCart(); document.getElementById('cart-badge').style.display='none'; }
+
+        // НАВИГАЦИЯ
+        function switchMainTab(tabId, el) {
+            document.querySelectorAll('.container').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById('tab-' + tabId).classList.add('active');
+            el.classList.add('active');
+        }
+        function goBack(tabId) { document.querySelectorAll('.container').forEach(c => c.classList.remove('active')); document.getElementById('tab-' + tabId).classList.add('active'); }
+        function switchGameTab(id) {
+            document.querySelectorAll('#tab-games > div[id^="g-"]').forEach(d => d.style.display = 'none');
+            document.getElementById('g-' + id).style.display = (id === 'donat') ? 'grid' : 'block';
+        }
+
+        let currentPlat = ""; let currentSocialIndex = 0; let currentGame = ""; let currentGameIndex = 0;
+        function openSocialPlatform(platKey) {
+            isFreeOrderMode = false; 
+            
+            document.getElementById('qty-wrap').style.display = 'flex';
+            document.getElementById('qty-label').style.display = 'block';
+            document.getElementById('mass-wrap').style.display = 'flex';
+            document.getElementById('cart-btn-hide').style.display = 'inline-block';
+            document.getElementById('order-main-btn').innerText = 'ОФОРМИТЬ';
+
+            currentPlat = platKey; currentSocialIndex = 0;
+            let p = SOCIAL_DATA[platKey];
+            document.getElementById('social-platform-title').innerText = p.title;
+            let html = '';
+            p.items.forEach((it, i) => {
+                let active = i === 0 ? 'active' : '';
+                html += `<div class="radio-item ${active}" id="social-radio-${i}" onclick="haptic('light'); selectSocialService(${i})">
+                    <div class="radio-content"><div class="radio-text">${it.name} <span class="health-dot"></span></div><div class="radio-desc">${it.desc}</div><div class="radio-price">${it.price}₽ за ${it.pack} шт.</div></div><div class="radio-circle"></div>
+                </div>`;
+            });
+            document.getElementById('social-list-container').innerHTML = html;
+            document.getElementById('social-qty').value = p.items[0].min; 
+            document.querySelectorAll('.container').forEach(c => c.classList.remove('active'));
+            document.getElementById('screen-social-order').classList.add('active');
+            updateSocialCalc();
+        }
+
+        function selectSocialService(index) {
+            currentSocialIndex = index;
+            document.querySelectorAll('#social-radio-list .radio-item').forEach(el => el.classList.remove('active'));
+            document.getElementById('social-radio-' + index).classList.add('active');
+            document.getElementById('social-qty').value = SOCIAL_DATA[currentPlat].items[index].min;
+            updateSocialCalc();
+        }
+
+        function updateSocialCalc() {
+            if(isFreeOrderMode) return;
+            let item = SOCIAL_DATA[currentPlat].items[currentSocialIndex];
+            let qty = parseInt(document.getElementById('social-qty').value) || item.min;
+            document.getElementById('social-total-price').innerText = ((item.price / item.pack) * qty).toFixed(2) + ' ₽';
+        }
+        function sendSocialOrder() { 
+            let link = document.getElementById('social-link').value;
+            if(link.length < 3) { tg.showAlert("Введите ссылку!"); return; }
+            triggerConfetti(); 
+            
+            if(isFreeOrderMode) {
+                tg.sendData(JSON.stringify({ action: "order_free", service: freeOrderData.key, link: link, qty: freeOrderData.qty }));
+            } else {
+                tg.sendData(JSON.stringify({ action: "order", service: SOCIAL_DATA[currentPlat].items[currentSocialIndex].id, link: link, qty: document.getElementById('social-qty').value }));
+            }
+            tg.close(); 
+        }
+
+        // ИГРЫ
+        function openGame(gameKey) {
+            currentGame = gameKey; currentGameIndex = 0;
+            let g = GAMES_DATA[gameKey];
+            document.getElementById('game-title').innerText = g.title;
+            let html = "";
+            if (g.type === "options") {
+                html += `<div class="radio-list" id="game-radio-list">`;
+                g.options.forEach((o, i) => { html += `<div class="radio-item ${i===0?'active':''}" id="game-radio-${i}" onclick="haptic('light'); selectGameOption(${i})"><div class="radio-text">${o.n}</div><div class="radio-circle"></div></div>`; });
+                html += `</div>`;
+                g.inputs.forEach(inp => { html += `<input type="text" id="${inp.id}" placeholder="${inp.label}">`; });
+                html += `<div class="price-total" id="g-total">${g.options[0].p.toFixed(2)} ₽</div><button class="main-btn" onclick="triggerConfetti(); tg.close()">ОПЛАТИТЬ</button>`;
+            } 
+            else if (g.type === "slider" || g.type === "slider_special") {
+                if(g.inputs) g.inputs.forEach(inp => { html += `<input type="text" id="${inp.id}" placeholder="${inp.label}">`; });
+                html += `<div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 16px; margin: 15px 0;"><div style="display:flex; justify-content:space-between; margin-bottom:10px;"><b>Количество:</b><b id="g-qty-val">${g.min}</b></div>`;
+                html += `<input type="range" id="g-slider" min="${g.min}" max="${g.max}" step="${g.step}" value="${g.min}" oninput="updateGameCalc()" style="width:100%; accent-color: #b829ff;"></div>`;
+                html += `<div class="price-total" id="g-total">${(g.min * (g.ppu||0)).toFixed(2)} ₽</div><button class="main-btn" onclick="triggerConfetti(); tg.close()">ОПЛАТИТЬ</button>`;
+            }
+            else if (g.type === "fixed" || g.type === "info") {
+                html += `<div style="background:rgba(0,0,0,0.3); padding:15px; border-radius:16px; margin-bottom:20px; white-space: pre-line; line-height:1.5;">${g.desc}</div>`;
+                if(g.price) html += `<div class="price-total">${g.price.toFixed(2)} ₽</div>`;
+                html += `<button class="main-btn" onclick="tg.close()">${g.btn || 'ОПЛАТИТЬ'}</button>`;
+            }
+            document.getElementById('game-form-container').innerHTML = html;
+            document.querySelectorAll('.container').forEach(c => c.classList.remove('active'));
+            document.getElementById('screen-game-order').classList.add('active');
+        }
+
+        function selectGameOption(index) {
+            currentGameIndex = index;
+            document.querySelectorAll('#game-radio-list .radio-item').forEach(el => el.classList.remove('active'));
+            document.getElementById('game-radio-' + index).classList.add('active');
+            document.getElementById('g-total').innerText = GAMES_DATA[currentGame].options[index].p.toFixed(2) + ' ₽';
+        }
+        function updateGameCalc() {
+            let g = GAMES_DATA[currentGame];
+            let v = parseInt(document.getElementById('g-slider').value);
+            document.getElementById('g-qty-val').innerText = v;
+            let p = g.type === 'slider_special' ? (v<=3 ? v*50 : (150+(v-3)*25)) : (v*g.ppu);
+            document.getElementById('g-total').innerText = p.toFixed(2) + ' ₽';
+        }
+
+        function closeAndCommand(cmd) { tg.sendData(JSON.stringify({action: "command", text: cmd})); tg.close(); }
+
+        let time = 3 * 3600 + 14 * 60 + 59;
+        setInterval(() => {
+            time--; let h = Math.floor(time / 3600), m = Math.floor((time % 3600) / 60), s = time % 60;
+            document.getElementById('flash-timer').innerText = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+        }, 1000);
+    </script>
+</body>
+</html>
