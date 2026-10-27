@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>IsmaBoost</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root { 
+            --bg: #0a0014; --bg2: #12001f; --card: #1a0a2e; --card2: #241040; 
+            --text: #ffffff; --hint: #9b7fb8; --accent: #b829ff; --accent2: #7b1fa2; 
+            --glow: rgba(184, 41, 255, 0.35); --border: rgba(184, 41, 255, 0.2); 
+            --success: #00e676; --error: #ff5252; 
+        }
+        body.light { 
+            --bg: #f0f0f0; --bg2: #ffffff; --card: #ffffff; --card2: #f9f9f9; 
+            --text: #000000; --hint: #555555; --border: rgba(0,0,0,0.1); --glow: rgba(0,0,0,0.1); 
+        }
+        /* Жидкая тема (анимированный градиент фона) */
+        body.liquid {
+            background: linear-gradient(270deg, #0a0014, #241040, #12001f, #3b0066);
+            background-size: 800% 800%;
+            animation: liquidBackground 15s ease infinite;
+        }
+        @keyframes liquidBackground {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        * { box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: linear-gradient(180deg, var(--bg) 0%, var(--bg2) 100%); color: var(--text); margin: 0; padding: 0 0 100px 0; overflow-x: hidden; -webkit-tap-highlight-color: transparent; min-height: 100vh; transition: background 0.3s, color 0.3s; }
+        #particles-js { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; }
+        .container { display: none; padding: 15px; animation: fadeIn 0.3s; }
+        .container.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .app-header { text-align: center; padding: 18px 15px 12px; background: linear-gradient(180deg, rgba(184,41,255,0.15) 0%, transparent 100%); border-bottom: 1px solid var(--border); margin-bottom: 15px; }
+        .app-logo { font-size: 26px; font-weight: 900; letter-spacing: 2px; background: linear-gradient(90deg, #b829ff, #ff66cc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; text-shadow: 0 0 30px var(--glow); }
+        .app-logo i { -webkit-text-fill-color: var(--accent); margin-right: 6px; }
+        .app-sub { font-size: 11px; color: var(--hint); margin-top: 4px; letter-spacing: 1px; }
+
+        .card { background: linear-gradient(135deg, var(--card) 0%, var(--card2) 100%); border-radius: 18px; padding: 18px; margin-bottom: 14px; border: 1px solid var(--border); box-shadow: 0 4px 20px rgba(0,0,0,0.4); }
+        .balance-card { background: linear-gradient(135deg, #b829ff 0%, #4a00e0 100%); border: none; text-align: center; padding: 24px; box-shadow: 0 8px 30px var(--glow); }
+        .balance-card .label { font-size: 13px; opacity: 0.9; letter-spacing: 1px; }
+        .balance-val { font-size: 38px; font-weight: 900; margin: 8px 0 14px; }
+
+        .btn { width: 100%; padding: 15px; border-radius: 14px; border: none; font-size: 15px; font-weight: 800; color: #fff; background: linear-gradient(135deg, var(--accent), var(--accent2)); cursor: pointer; transition: 0.2s; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 4px 15px var(--glow); margin-top: 8px; }
+        .btn:active { transform: scale(0.96); opacity: 0.85; }
+        .btn-sec { background: rgba(184,41,255,0.1); border: 1px solid var(--border); box-shadow: none; color: var(--text); }
+        .btn-sm { padding: 10px; font-size: 13px; }
+        .btn-success { background: linear-gradient(135deg, #00e676, #00b0ff); box-shadow: 0 4px 15px rgba(0,230,118,0.3); }
+        .btn-vip { background: linear-gradient(135deg, #ffd700, #ff8c00); box-shadow: 0 4px 15px rgba(255,215,0,0.4); color: #000; }
+
+        input, select { width: 100%; padding: 14px; background: rgba(0,0,0,0.4); border: 1px solid var(--border); border-radius: 12px; color: var(--text); font-size: 15px; margin-bottom: 12px; outline: none; }
+        body.light input { background: #eee; }
+        input:focus { border-color: var(--accent); }
+
+        .qty-btn { background: rgba(184,41,255,0.15); border: 1px solid var(--border); color: var(--text); font-size: 20px; font-weight: bold; width: 45px; height: 45px; border-radius: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; user-select: none; }
+        .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+        .cat { background: linear-gradient(135deg, var(--card) 0%, var(--card2) 100%); border-radius: 16px; padding: 18px 10px; text-align: center; cursor: pointer; border: 1px solid var(--border); transition: 0.2s; }
+        .cat:active { transform: scale(0.95); background: rgba(184,41,255,0.15); }
+        .cat i { font-size: 34px; margin-bottom: 8px; display: block; }
+        .cat .cat-name { font-weight: 800; font-size: 13px; }
+        .cat .cat-cnt { font-size: 11px; color: var(--hint); margin-top: 3px; }
+
+        .item { display: flex; justify-content: space-between; align-items: center; padding: 14px; background: rgba(0,0,0,0.3); border-radius: 14px; margin-bottom: 10px; border: 1px solid var(--border); transition: 0.2s; cursor: pointer; }
+        body.light .item { background: rgba(0,0,0,0.05); }
+        .item-name { font-weight: 700; font-size: 14px; }
+        .item-desc { font-size: 11px; color: var(--hint); margin-top: 3px; line-height: 1.4; white-space: pre-line; }
+        .item-price { font-weight: 800; color: var(--accent); font-size: 14px; white-space: nowrap; margin-left: 8px; }
+
+        .page-header { display: flex; align-items: center; gap: 12px; font-size: 20px; font-weight: 900; margin-bottom: 18px; }
+        .back-btn { background: rgba(184,41,255,0.15); border: 1px solid var(--border); color: var(--text); width: 40px; height: 40px; border-radius: 12px; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; height: 72px; background: rgba(10,0,20,0.95); backdrop-filter: blur(20px); border-top: 1px solid var(--border); display: flex; justify-content: space-around; align-items: center; z-index: 100; padding-bottom: env(safe-area-inset-bottom); }
+        body.light .bottom-nav { background: rgba(255,255,255,0.95); }
+        .nav-item { display: flex; flex-direction: column; align-items: center; color: var(--hint); font-size: 10px; background: none; border: none; gap: 4px; font-weight: 700; padding: 8px; position: relative; cursor: pointer; }
+        .nav-item.active { color: var(--accent); }
+        .nav-item i { font-size: 20px; }
+        .cart-badge { position: absolute; top: 0; right: 0; background: var(--error); color: white; border-radius: 50%; padding: 2px 6px; font-size: 10px; display: none; }
+
+        .skeleton { background: linear-gradient(90deg, rgba(184,41,255,0.1) 25%, rgba(184,41,255,0.2) 50%, rgba(184,41,255,0.1) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 14px; height: 60px; margin-bottom: 10px; }
+        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+        .confetti-piece { position: fixed; width: 10px; height: 10px; top: -10px; opacity: 1; animation: fall 3s linear forwards; z-index: 9999; pointer-events: none; }
+        @keyframes fall { 0% { transform: translateY(0) rotate(0deg); opacity: 1; } 100% { transform: translateY(100vh) rotate(720deg); opacity: 0; } }
+
+        .bundle-card { background: linear-gradient(135deg, rgba(184,41,255,0.1) 0%, rgba(26,10,46,1) 100%); border: 1px solid var(--border); border-radius: 16px; padding: 16px; margin-bottom: 15px; position: relative; overflow: hidden; cursor: pointer; transition: 0.2s; }
+        .bundle-card:active { transform: scale(0.97); }
+        .bundle-badge { position: absolute; top: 12px; right: -28px; background: var(--success); color: #000; padding: 3px 30px; font-size: 10px; font-weight: 900; transform: rotate(45deg); }
+        .bundle-title { font-size: 18px; font-weight: 900; color: var(--accent); margin-bottom: 5px; }
+        .bundle-desc { font-size: 12px; color: var(--hint); margin-bottom: 10px; }
+        .bundle-price { font-size: 20px; font-weight: 900; color: var(--success); }
+        .bundle-old-price { font-size: 12px; color: var(--hint); text-decoration: line-through; margin-left: 8px; }
+
+        .theme-switch { display: flex; gap: 6px; background: rgba(0,0,0,0.2); border-radius: 12px; padding: 4px; margin-top: 10px; flex-wrap: wrap; }
+        .theme-switch button { flex: 1; min-width: 70px; background: none; border: none; color: var(--hint); padding: 8px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 11px; }
+        .theme-switch button.active { background: var(--accent); color: white; }
+
+        #rocket-anim { position: fixed; bottom: -100px; left: 50%; font-size: 80px; z-index: 10000; transition: all 2s ease-in-out; opacity: 0; pointer-events: none; transform: translateX(-50%); }
+        .quiz-btn { background: rgba(184,41,255,0.1); border: 1px solid var(--border); color: var(--text); padding: 12px; border-radius: 12px; margin-bottom: 8px; width: 100%; text-align: left; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .quiz-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+        .trust-badge { display: flex; align-items: center; justify-content: center; gap: 8px; background: rgba(0, 230, 118, 0.1); border: 1px solid var(--success); color: var(--success); padding: 10px; border-radius: 12px; margin-bottom: 15px; font-size: 12px; font-weight: bold; }
+        .progress-container { background: rgba(0,0,0,0.5); border-radius: 10px; margin: 10px 0; overflow: hidden; height: 20px; position: relative; }
+        .progress-bar { background: linear-gradient(90deg, var(--accent), #ff66cc); height: 100%; transition: width 0.5s ease; }
+        .progress-text { position: absolute; width: 100%; text-align: center; font-size: 11px; font-weight: bold; line-height: 20px; color: #fff; text-shadow: 1px 1px 2px #000; }
+        .timer-banner { background: linear-gradient(90deg, #ff0055, #ff5500); color: white; text-align: center; padding: 10px; border-radius: 12px; font-weight: bold; margin-bottom: 15px; font-size: 14px; }
+        .chart-container { width: 100%; height: 150px; display: flex; align-items: flex-end; justify-content: space-between; padding: 10px 0; gap: 5px; }
+        .chart-bar { flex: 1; background: linear-gradient(180deg, var(--accent), var(--accent2)); border-radius: 5px 5px 0 0; position: relative; min-height: 5px; }
+        .chart-label { text-align: center; font-size: 10px; color: var(--hint); margin-top: 5px; }
+    </style>
+</head>
+<body>
+<div id="particles-js"></div>
+<div id="rocket-anim">🚀</div>
+
+<div class="app-header">
+    <div class="app-logo"><i class="fas fa-bolt"></i>ISMABOOST</div>
+    <div class="app-sub">ULTRA SMM PANEL</div>
+</div>
+
+<!-- ВКЛАДКА: ПРОФИЛЬ -->
+<div id="tab-profile" class="container active">
+    <div class="timer-banner" id="promo-timer">🔥 Акция: скидка 3% сгорит через <span id="timer-clock">15:00</span></div>
+    <div class="card balance-card">
+        <div class="label">💰 ВАШ БАЛАНС</div>
+        <div class="balance-val" id="main-balance">0.00 ₽</div>
+        <button class="btn btn-sec" style="background:rgba(255,255,255,0.2); margin-bottom:10px;" onclick="refreshBalance()"><i class="fas fa-sync-alt"></i> Обновить</button>
+        <button class="btn btn-success" onclick="openTopup()"><i class="fas fa-plus-circle"></i> Пополнить</button>
+    </div>
+    <div class="card">
+        <h3 style="margin:0 0 12px;">👑 VIP Подписка</h3>
+        <p style="font-size:12px; color:var(--hint); margin-bottom:10px;">Скидка 5% на всё + бесплатная коробка каждый месяц</p>
+        <button class="btn btn-vip" onclick="openVipConfirm()">Купить VIP за 199 ₽/мес</button>
+    </div>
+    <div class="card">
+        <h3 style="margin:0 0 12px;">📈 Моя активность</h3>
+        <div class="chart-container" id="user-chart"></div>
+    </div>
+    <div class="card">
+        <h3 style="margin:0 0 12px;">📊 Действия</h3>
+        <button class="btn btn-sec btn-sm" onclick="openHistoryInBot()"><i class="fas fa-list"></i> История заказов</button>
+        <button class="btn btn-sec btn-sm" onclick="openTopInBot()"><i class="fas fa-fire"></i> Топ услуги</button>
+        <button class="btn btn-sec btn-sm" onclick="openRef()"><i class="fas fa-user"></i> Профиль / Рефералка</button>
+    </div>
+</div>
+
+<!-- ВКЛАДКА: НАКРУТКА -->
+<div id="tab-social" class="container">
+    <div class="trust-badge"><i class="fas fa-shield-alt"></i> Безопасно. Заказы напрямую в панель</div>
+    <button class="btn btn-success" style="margin-bottom:15px;" onclick="startQuiz()"><i class="fas fa-magic"></i> Умный ИИ-подбор</button>
+    <div class="page-header"><i class="fas fa-rocket" style="color:var(--accent)"></i> НАКРУТКА</div>
+    <div class="grid" id="platforms-grid"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>
+</div>
+
+<!-- ЭКРАН УСЛУГ -->
+<div id="screen-services" class="container">
+    <div class="page-header">
+        <button class="back-btn" onclick="navTo('tab-social')"><i class="fas fa-chevron-left"></i></button>
+        <span id="platform-title">Услуги</span>
+    </div>
+    <div id="services-list"></div>
+</div>
+
+<!-- ЭКРАН ОФОРМЛЕНИЯ ЗАКАЗА -->
+<div id="screen-checkout" class="container">
+    <div class="page-header">
+        <button class="back-btn" onclick="navTo('screen-services')"><i class="fas fa-chevron-left"></i></button>
+        <span>Оформление</span>
+    </div>
+    <div class="card">
+        <h3 id="checkout-title" style="margin:0 0 10px;">Услуга</h3>
+        <div id="checkout-desc" style="font-size:12px; color:var(--hint); margin-bottom:20px; white-space: pre-line;"></div>
+        <label style="font-size:13px; color:var(--accent);">🔗 Ссылка</label>
+        <input type="text" id="order-link" placeholder="https://t.me/channel/123">
+        <label style="font-size:13px; color:var(--accent);">🔢 Количество</label>
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:15px;">
+            <div class="qty-btn" onclick="changeQty(-25)">-</div>
+            <input type="number" id="order-qty" value="100" min="25" oninput="updateTotal()" style="text-align:center; font-weight:bold; margin-bottom:0;">
+            <div class="qty-btn" onclick="changeQty(25)">+</div>
+        </div>
+        <div style="font-size:26px; font-weight:900; text-align:center; margin:20px 0; color:var(--accent);" id="checkout-total">0 ₽</div>
+        <div class="progress-container" id="order-progress" style="display:none;">
+            <div class="progress-bar" id="order-progress-bar" style="width: 0%;"></div>
+            <div class="progress-text" id="order-progress-text">0%</div>
+        </div>
+        <button class="btn" onclick="submitOrder()"><i class="fas fa-shopping-cart"></i> Оплатить</button>
+        <button class="btn btn-sec" onclick="addToCart()"><i class="fas fa-cart-plus"></i> В корзину</button>
+    </div>
+</div>
+
+<!-- ВКЛАДКА: ПАКЕТЫ -->
+<div id="tab-bundles" class="container">
+    <div class="page-header"><i class="fas fa-gift" style="color:var(--accent)"></i> ПАКЕТЫ</div>
+    <div id="bundle-filters" style="display:flex; gap:8px; overflow-x:auto; padding-bottom:10px; margin-bottom:10px;"></div>
+    <div id="bundles-list"></div>
+</div>
+
+<!-- ЭКРАН ОФОРМЛЕНИЯ ПАКЕТА -->
+<div id="screen-bundle-checkout" class="container">
+    <div class="page-header">
+        <button class="back-btn" onclick="navTo('tab-bundles')"><i class="fas fa-chevron-left"></i></button>
+        <span>Пакет</span>
+    </div>
+    <div class="card">
+        <h3 id="bundle-title"></h3>
+        <div id="bundle-desc" style="font-size:12px; color:var(--hint); margin-bottom:15px;"></div>
+        <div style="font-size:24px; font-weight:900; color:var(--success); margin-bottom:15px;" id="bundle-total"></div>
+        <label style="font-size:13px; color:var(--accent);">🔗 Ссылка</label>
+        <input type="text" id="bundle-link" placeholder="https://t.me/channel/123">
+        <button class="btn" onclick="submitBundle()"><i class="fas fa-shopping-cart"></i> Оплатить</button>
+    </div>
+</div>
+
+<!-- ВКЛАДКА: ИГРЫ -->
+<div id="tab-games" class="container">
+    <div class="page-header"><i class="fas fa-gamepad" style="color:var(--accent)"></i> ИГРЫ</div>
+    <div class="grid" id="games-grid"></div>
+</div>
+
+<!-- ВКЛАДКА: НАСТРОЙКИ (ЖИДКАЯ ТЕМА) -->
+<div id="tab-settings" class="container">
+    <div class="page-header" style="justify-content:center;"><i class="fas fa-cog"></i> НАСТРОЙКИ</div>
+    <div class="card">
+        <h3 style="margin:0 0 12px;">🎨 Оформление и Тема</h3>
+        <div class="theme-switch">
+            <button onclick="setTheme('light')" id="btn-light">☀️ Светлая</button>
+            <button onclick="setTheme('dark')" id="btn-dark">🌙 Тёмная</button>
+            <button onclick="setTheme('liquid')" id="btn-liquid">🌊 Жидкая</button>
+            <button onclick="setTheme('system')" id="btn-system">⚙️ Система</button>
+        </div>
+    </div>
+    <div class="card">
+        <h3 style="margin:0 0 12px;">🛠 Инструменты</h3>
+        <button class="btn btn-sec btn-sm" onclick="navTo('tab-clicker')"><i class="fas fa-hand-pointer"></i> Тапалка</button>
+        <button class="btn btn-sec btn-sm" onclick="navTo('tab-wheel')"><i class="fas fa-dharmachakra"></i> Рулетки и Бонусы</button>
+        <button class="btn btn-sec btn-sm" onclick="navTo('screen-cart')"><i class="fas fa-shopping-cart"></i> Корзина <span class="cart-badge" id="cart-badge-settings">0</span></button>
+    </div>
+    <div class="card">
+        <h3 style="margin:0 0 12px;">👤 Профиль</h3>
+        <button class="btn btn-sec btn-sm" onclick="openRef()"><i class="fas fa-link"></i> Реферальная ссылка</button>
+        <button class="btn btn-sec btn-sm" onclick="navTo('screen-reviews')"><i class="fas fa-star"></i> Отзывы со скринами</button>
+        <button class="btn btn-sec btn-sm" onclick="cmd('/profile')"><i class="fab fa-telegram"></i> Профиль в боте</button>
+    </div>
+</div>
+
+<!-- ТАПАЛКА -->
+<div id="tab-clicker" class="container">
+    <div class="page-header"><button class="back-btn" onclick="navTo('tab-settings')"><i class="fas fa-chevron-left"></i></button><span>ТАПАЛКА</span></div>
+    <p style="text-align:center; color:var(--hint); font-size:13px;">Набери 22 222 тапа и получи<br><b style="color:var(--accent);">500 просмотров TikTok бесплатно!</b></p>
+    <div id="tap-coin" onclick="doTap()" style="width:200px; height:200px; background:radial-gradient(circle at 30% 30%, #d94dff 0%, var(--accent) 50%, #4a00e0 100%); border-radius:50%; margin:40px auto; display:flex; align-items:center; justify-content:center; font-size:80px; box-shadow: 0 15px 40px var(--glow), inset 0 -5px 20px rgba(0,0,0,0.3); cursor:pointer; user-select:none; transition:0.1s;">💎</div>
+    <h2 style="text-align:center; font-size:36px; margin:20px 0;" id="tap-score">0</h2>
+</div>
+
+<!-- РУЛЕТКА (С ДЖЕКПОТАМИ ИЗ ТЗ) -->
+<div id="tab-wheel" class="container">
+    <div class="page-header"><button class="back-btn" onclick="navTo('tab-settings')"><i class="fas fa-chevron-left"></i></button><span>КОЛЕСО ФОРТУНЫ</span></div>
+    
+    <div style="display:flex; gap:10px; margin-bottom:15px;">
+        <button class="btn btn-sec active" id="wheel-tab-150" onclick="switchWheel(150)" style="flex:1;">Рулетка 150 ₽</button>
+        <button class="btn btn-sec" id="wheel-tab-49" onclick="switchWheel(49)" style="flex:1;">Мини-рулетка 49 ₽</button>
+    </div>
+
+    <!-- ТЕКСТ ДЖЕКПОТА СВЕРХУ РУЛЕТКИ -->
+    <div style="text-align:center; font-weight:900; font-size:14px; color:#ffd700; margin-bottom:15px; text-shadow:0 0 10px rgba(255,215,0,0.5);" id="wheel-jackpot-text">
+        💎 ДЖЕКПОТ: 100 ЗВЁЗД М ТД
+    </div>
+
+    <div style="position:relative; width:320px; height:320px; margin:10px auto 30px;">
+        <div style="position:absolute; top:-25px; left:50%; transform:translateX(-50%); font-size:50px; z-index:10; color:#fff; text-shadow:0 0 20px var(--glow);">▼</div>
+        <div id="wheel-wrapper" style="width:100%; height:100%; transition: transform 5s cubic-bezier(0.15, 0.9, 0.25, 1); filter: drop-shadow(0 0 30px var(--glow));">
+            <svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:100%;">
+                <g id="wheel-sectors"></g>
+                <circle cx="200" cy="200" r="195" fill="none" stroke="var(--accent)" stroke-width="10"/>
+                <circle cx="200" cy="200" r="40" fill="#0a0014" stroke="var(--accent)" stroke-width="4"/>
+                <text x="200" y="212" text-anchor="middle" font-size="30" fill="var(--accent)" font-weight="bold">🎁</text>
+            </svg>
+        </div>
+    </div>
+    
+    <div style="text-align:center; font-weight:800; font-size:18px; color:var(--accent); height:32px; margin-top:10px;" id="wheel-text"></div>
+    <button class="btn" id="spin-btn" onclick="spinWheel()" style="margin-top:20px;"><i class="fas fa-dharmachakra"></i> Крутить за 150 ₽</button>
+    
+    <div id="wheel-prize-block" style="display:none; margin-top:20px;">
+        <div class="card" style="border: 1px solid var(--accent); background: rgba(184,41,255,0.1);">
+            <h4 style="margin:0 0 10px; color:var(--accent);">🎉 Введите ссылку для активации приза:</h4>
+            <input type="text" id="wheel-prize-link" placeholder="https://t.me/channel/123">
+            <button class="btn" onclick="activatePrize()">🎁 Активировать в панель</button>
+        </div>
+    </div>
+</div>
+
+<!-- КОРЗИНА -->
+<div id="screen-cart" class="container">
+    <div class="page-header"><button class="back-btn" onclick="navTo('tab-settings')"><i class="fas fa-chevron-left"></i></button><span>Корзина</span></div>
+    <div id="cart-list"></div>
+    <div class="card" id="cart-summary" style="display:none;">
+        <div style="display:flex; justify-content:space-between; margin-bottom:10px;"><span>Сумма:</span> <b id="cart-total-price">0 ₽</b></div>
+        <button class="btn btn-success" onclick="checkoutCart()">Оплатить всё</button>
+    </div>
+</div>
+
+<!-- ОТЗЫВЫ -->
+<div id="screen-reviews" class="container">
+    <div class="page-header"><button class="back-btn" onclick="navTo('tab-settings')"><i class="fas fa-chevron-left"></i></button><span>Отзывы</span></div>
+    <div class="card">
+        <h3 style="margin:0 0 10px;">📸 Скрины от клиентов</h3>
+        <p style="font-size:12px; color:var(--hint); margin-bottom:15px;">Отправьте скриншот вашего заказа и получите 10 ₽ на баланс!</p>
+        <button class="btn btn-success" onclick="tg.showAlert('Отправьте скриншот в @ismaboy014 и получите бонус!')">Загрузить скрин</button>
+    </div>
+    <div class="card" id="reviews-list">
+        <div style="text-align:center; color:var(--hint);">Загрузка отзывов...</div>
+    </div>
+    <div id="admin-review-block" class="card" style="display:none; border-color: var(--error);">
+        <h4 style="color:var(--error); margin-top:0;">🛡 Админ-панель</h4>
+        <p style="font-size:12px; color:var(--hint);">Удаление плохих отзывов</p>
+        <button class="btn btn-sm btn-sec" onclick="deleteReview()">Удалить последний</button>
+    </div>
+</div>
+
+<!-- РЕФЕРАЛКА -->
+<div id="screen-ref" class="container">
+    <div class="page-header"><button class="back-btn" onclick="navTo('tab-settings')"><i class="fas fa-chevron-left"></i></button><span>Рефералка</span></div>
+    <div class="card" style="text-align:center;">
+        <h3 style="color:var(--accent);">🎁 Пригласи друга</h3>
+        <p style="font-size:12px; color:var(--hint); margin:10px 0;">За каждого друга — 5% с его заказов!</p>
+        <input type="text" id="ref-link-input" readonly style="text-align:center; font-size:13px;">
+        <button class="btn" onclick="copyRefLink()">📋 Скопировать</button>
+    </div>
+</div>
+
+<!-- КВИЗ -->
+<div id="screen-quiz" class="container">
+    <div class="page-header"><button class="back-btn" onclick="navTo('tab-social')"><i class="fas fa-chevron-left"></i></button><span>Умный подбор</span></div>
+    <div class="card" id="quiz-content"></div>
+</div>
+
+<!-- ПОДДЕРЖКА -->
+<div id="support-btn" onclick="toggleSupport()" style="position:fixed; bottom:85px; right:20px; width:55px; height:55px; background:var(--accent); border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; font-size:24px; box-shadow:0 4px 15px var(--glow); cursor:pointer; z-index:1000; transition:0.3s;">
+    <i class="fas fa-comment-dots"></i>
+</div>
+<div id="support-modal" style="display:none; position:fixed; bottom:150px; right:20px; width:280px; background:var(--card); border:1px solid var(--accent); border-radius:16px; padding:15px; z-index:1001; box-shadow:0 10px 30px rgba(0,0,0,0.8);">
+    <h4 style="margin:0 0 10px; color:var(--accent);">💬 Поддержка</h4>
+    <button class="btn btn-sm btn-success" onclick="tg.openTelegramLink('https://t.me/ismaboy014')">Написать @ismaboy014</button>
+    <button class="btn btn-sm btn-sec" onclick="cmd('/help')">Частые вопросы</button>
+    <button class="btn btn-sm btn-sec" onclick="toggleSupport()">Закрыть</button>
+</div>
+
+<div style="text-align:center; padding:20px; font-size:13px; color:var(--hint); margin-bottom:80px;">
+    <i class="fab fa-tiktok" style="color:var(--accent);"></i> Мой TikTok: 
+    <a href="https://tiktok.com/@ismaaaa983" target="_blank" style="color:var(--accent); font-weight:bold; text-decoration:none;">ismaaaa983</a>
+</div>
+
+<!-- НИЖНЕЕ МЕНЮ -->
+<div class="bottom-nav">
+    <button class="nav-item active" onclick="switchTab(this,'tab-profile')"><i class="fas fa-user"></i>Профиль</button>
+    <button class="nav-item" onclick="switchTab(this,'tab-social')"><i class="fas fa-rocket"></i>Накрутка</button>
+    <button class="nav-item" onclick="switchTab(this,'tab-bundles')"><i class="fas fa-gift"></i>Пакеты</button>
+    <button class="nav-item" onclick="switchTab(this,'tab-games')"><i class="fas fa-gamepad"></i>Игры</button>
+    <button class="nav-item" onclick="switchTab(this,'tab-settings')"><i class="fas fa-cog"></i>Настройки</button>
+</div>
+<script>
+    const tg = window.Telegram.WebApp;
+    tg.expand(); tg.ready();
+    const urlParams = new URLSearchParams(window.location.search);
+    let userBalance = parseFloat(urlParams.get('bal')) || 0;
+    const userId = tg.initDataUnsafe?.user?.id || 0;
+    const isAdmin = (userId === 7414904006); 
+    
+    if (isAdmin) {
+        const adminBlock = document.getElementById('admin-review-block');
+        if (adminBlock) adminBlock.style.display = 'block';
+    }
+
+    if (typeof particlesJS !== 'undefined') {
+        particlesJS("particles-js", { particles: { number: { value: 30 }, color: { value: "#b829ff" }, shape: { type: "circle" }, opacity: { value: 0.5 }, size: { value: 3 }, move: { speed: 1 } }, interactivity: { events: { onhover: { enable: true, mode: "repulse" } } } });
+    }
+
+    const balanceEl = document.getElementById('main-balance');
+    if (balanceEl) balanceEl.innerText = userBalance.toFixed(2) + ' ₽';
+
+    let timeLeft = 15 * 60;
+    setInterval(() => {
+        const timerEl = document.getElementById('timer-clock');
+        if (!timerEl) return;
+        if (timeLeft <= 0) { document.getElementById('promo-timer').style.display = 'none'; return; }
+        timeLeft--;
+        let m = Math.floor(timeLeft / 60);
+        let s = timeLeft % 60;
+        timerEl.innerText = `${m}:${s < 10 ? '0' : ''}${s}`;
+    }, 1000);
+
+    const chartContainer = document.getElementById('user-chart');
+    if (chartContainer) {
+        const days = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+        const values = [30, 50, 20, 80, 40, 90, 60];
+        days.forEach((day, i) => {
+            chartContainer.innerHTML += `<div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%;">
+                <div class="chart-bar" style="height:${values[i]}%;"></div>
+                <div class="chart-label">${day}</div>
+            </div>`;
+        });
+    }
+
+    function setTheme(mode) {
+        localStorage.setItem('theme', mode);
+        document.querySelectorAll('.theme-switch button').forEach(b => b.classList.remove('active'));
+        let activeBtn = document.getElementById('btn-' + mode);
+        if (activeBtn) activeBtn.classList.add('active');
+        
+        document.body.classList.remove('light', 'liquid');
+        if (mode === 'light') document.body.classList.add('light');
+        else if (mode === 'liquid') document.body.classList.add('liquid');
+        else if (mode === 'system') {
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) document.body.classList.add('light');
+        }
+    }
+    const savedTheme = localStorage.getItem('theme') || 'system';
+    setTheme(savedTheme);
+
+    function switchTab(btn, tabId) {
+        document.querySelectorAll('.container').forEach(c => c.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        if(btn) btn.classList.add('active');
+        window.scrollTo(0, 0);
+        if(tabId === 'screen-cart') updateCartUI();
+        if(tabId === 'screen-reviews') loadReviews();
+        if(tabId === 'tab-wheel') switchWheel(currentWheelMode);
+    }
+    
+    function navTo(id) {
+        document.querySelectorAll('.container').forEach(c => c.classList.remove('active'));
+        let target = document.getElementById(id);
+        if(target) target.classList.add('active');
+        window.scrollTo(0, 0);
+        if(id === 'screen-cart') updateCartUI();
+        if(id === 'screen-reviews') loadReviews();
+        if(id === 'tab-wheel') switchWheel(currentWheelMode);
+    }
+    
+    function sendToBot(data) { 
+        data.user_id = userId; 
+        data.current_balance = userBalance; 
+        tg.sendData(JSON.stringify(data)); 
+        tg.close(); 
+    }
+    
+    function cmd(text) { sendToBot({action: 'command', text: text}); }
+    function openHistoryInBot() { cmd('/orders'); }
+    function openTopInBot() { cmd('/top'); }
+
+    function refreshBalance() { 
+        let url = new URL(window.location.href); 
+        url.searchParams.set('t', Date.now()); 
+        window.location.href = url.toString(); 
+    }
+
+    function fireRocket() {
+        const rocket = document.getElementById('rocket-anim');
+        if(!rocket) return;
+        rocket.style.opacity = '1'; rocket.style.bottom = '0px'; rocket.style.transform = 'scale(1.5) rotate(45deg)';
+        setTimeout(() => { rocket.style.bottom = '120vh'; rocket.style.opacity = '0'; }, 100);
+        setTimeout(() => { rocket.style.bottom = '-100px'; rocket.style.transform = 'scale(1) rotate(0deg)'; }, 2000);
+    }
+
+    function fireConfetti() {
+        const colors = ['#b829ff', '#00e676', '#ffd700', '#ff5252', '#00b0ff'];
+        for (let i = 0; i < 50; i++) {
+            const c = document.createElement('div');
+            c.classList.add('confetti-piece');
+            c.style.left = Math.random() * 100 + 'vw';
+            c.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+            c.style.animationDuration = (Math.random() * 2 + 1.5) + 's';
+            document.body.appendChild(c);
+            setTimeout(() => c.remove(), 4000);
+        }
+        if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+    }
+
+    function openRef() { 
+        navTo('screen-ref'); 
+        document.getElementById('ref-link-input').value = `https://t.me/ismaboost1_bot?start=ref${userId}`; 
+    }
+    
+    function copyRefLink() {
+        let input = document.getElementById('ref-link-input');
+        input.select(); input.setSelectionRange(0, 99999);
+        navigator.clipboard.writeText(input.value);
+        tg.showAlert("✅ Ссылка скопирована!");
+    }
+    
+    function openTopup() { 
+        let amount = prompt("Введите сумму пополнения (от 100 ₽):", "500");
+        if (amount && parseInt(amount) >= 100) {
+            sendToBot({ action: "topup", amount: parseInt(amount) });
+        }
+    }
+
+    function toggleSupport() {
+        let modal = document.getElementById('support-modal');
+        if(!modal) return;
+        modal.style.display = (modal.style.display === 'none') ? 'block' : 'none';
+    }
+
+    function openVipConfirm() {
+        tg.showPopup({
+            title: "👑 Покупка VIP",
+            message: "Вы хотите купить VIP за 199 ₽? (Скидка 5% на всё + бонусы)",
+            buttons: [
+                { id: 'yes', type: 'default', text: 'Да, купить' },
+                { id: 'no', type: 'destructive', text: 'Отмена' }
+            ]
+        }, function(buttonId) {
+            if (buttonId === 'yes') {
+                sendToBot({ action: "buy_vip", price: 199 });
+            }
+        });
+    }
+
+    // Каталог услуг
+    const CATALOG = {
+        telegram: { title: "Telegram", icon: "fab fa-telegram", color: "#0088cc", items: [
+            {id:"3127", key:"tg_stars", name:"🌟 Звёзды (на аккаунт)", desc:"⚡ Быстро\n🌟 Мин. 100 шт\n💰 205₽/100 шт", price:205, pack:100, speed:"⚡ 5 мин"},
+            {id:"1580", key:"tg_subs", name:"✅ Подписчики Без Списаний💎", desc:"♾️ Навсегда без списаний 🛡️\n📉 Списания: 0% ❌", price:114.99, pack:1000, speed:"⚡ 0-10 мин"},
+            {id:"2759", key:"tg_views", name:"⚡️ Просмотры", desc:"🚀 До 200к/сутки\n💰 14.99₽/1к", price:14.99, pack:1000, speed:"⚡ 15 мин"},
+            {id:"2910", key:"tg_bot_start", name:"🤖 Запуск Бота", desc:"🚀 100к/день\n💰 24.99₽/1к", price:24.99, pack:1000, speed:"⚡ 10 мин"},
+            {id:"3079", key:"tg_react_pos", name:"🚀 Реакции 👍🔥❤️", desc:"🎭 Микс позитивных\n💰 15.70₽/1к", price:15.70, pack:1000, speed:"⚡ 15 мин"},
+            {id:"3070", key:"tg_react_neg", name:"👎 Реакции 🖕💩", desc:"🎭 Микс негативных\n💰 15.70₽/1к", price:15.70, pack:1000, speed:"⚡ 15 мин"},
+            {id:"3129", key:"tg_report_user_fraud", name:"🚨 Жалоба [Мошенничество]", desc:"⚡ Быстро\n💰 420₽/1к", price:420, pack:1000, speed:"🕒 1 час"},
+            {id:"3130", key:"tg_report_user_spam", name:"🚨 Жалоба [Спам]", desc:"⚡ Быстро\n💰 420₽/1к", price:420, pack:1000, speed:"🕒 1 час"},
+            {id:"2793", key:"tg_report_channel_fraud", name:"🚨 Жалобы на канал [Мошенничество]", desc:"⚡ Быстро\n💰 420₽/1к", price:420, pack:1000, speed:"🕒 1 час"},
+            {id:"3134", key:"tg_report_channel_spam", name:"🚨 Жалобы на канал [Спам]", desc:"⚡ Быстро\n💰 420₽/1к", price:420, pack:1000, speed:"🕒 1 час"}
+        ]},
+        tiktok: { title: "TikTok", icon: "fab fa-tiktok", color: "#fff", items: [
+            {id:"2932", key:"tt_subs", name:"💫 Подписчики ♻️ 30д", desc:"♻️ 30 дней\n💰 651₽/1к", price:651, pack:1000, speed:"⚡ 30 мин"},
+            {id:"2631", key:"tt_views", name:"💎 Просмотры ♻️ 30д", desc:"♻️ 30 дней\n💰 24.99₽/1к", price:24.99, pack:1000, speed:"⚡ 15 мин"},
+            {id:"2506", key:"tt_likes_twiboost", name:"❤️ TikTok Лайки ♻️", desc:"♻️ Без списаний🚀", price:379.99, pack:1000, speed:"⚡ 15 мин"},
+            {id:"1811", key:"tt_saves", name:"🌟 Сохранения ♻️", desc:"♻️ 30 дней\n💰 14.99₽/1к", price:14.99, pack:1000, speed:"⚡ 15 мин"},
+            {id:"3348", key:"tt_reposts", name:"🔁 Репосты [Гарантия 30д ♻️]", desc:"♻️ 30 дней\n💰 45.93₽/1к", price:45.93, pack:1000, speed:"⚡ 1 час"}
+        ]},
+        youtube: { title: "YouTube", icon: "fab fa-youtube", color: "#ff0000", items: [
+            {id:"2755", key:"yt_subs", name:"👥 Подписчики ♻️", desc:"♻️ 30 дней\n💰 3502₽/1к", price:3502, pack:1000, speed:"🕒 6 часов"},
+            {id:"2772", key:"yt_views", name:"👀 Просмотры ♻️", desc:"♻️ 30 дней\n💰 164₽/1к", price:164, pack:1000, speed:"⚡ 1 час"},
+            {id:"2058", key:"yt_likes", name:"❤️ Лайки ♻️", desc:"♻️ 30 дней\n💰 529₽/1к", price:529, pack:1000, speed:"🕒 2 часа"}
+        ]},
+        instagram: { title: "Instagram", icon: "fab fa-instagram", color: "#e84393", items: [
+            {id:"2278", key:"ig_subs", name:"👥 Подписчики ♻️", desc:"♻️ 30 дней\n💰 437₽/1к", price:437, pack:1000, speed:"🕒 1 час"},
+            {id:"1607", key:"ig_likes", name:"❤️ Instagram Лайки (365 дней)", desc:"✅ Без списаний\n💰 89₽/1к", price:89, pack:1000, speed:"⚡ 30 мин"},
+            {id:"2760", key:"ig_views", name:"👁 Просмотры", desc:"🚀 Reels\n💰 19.99₽/1к", price:19.99, pack:1000, speed:"⚡ 15 мин"},
+            {id:"2762", key:"ig_reach", name:"📊 Охват+Показы", desc:"📈 Плавные\n💰 13₽/1к", price:13, pack:1000, speed:"⚡ 30 мин"},
+            {id:"2761", key:"ig_saves", name:"💾 Сохранения", desc:"🚀 Быстро\n💰 8₽/1к", price:8, pack:1000, speed:"⚡ 15 мин"}
+        ]},
+        vk: { title: "ВКонтакте", icon: "fab fa-vk", color: "#4a76a8", items: [
+            {id:"1769", key:"vk_subs", name:"👥 Подписчики ⛔", desc:"⚠️ Без гарантии\n💰 63₽/1к", price:63, pack:1000, speed:"⚡ 30 мин"},
+            {id:"2307", key:"vk_likes", name:"❤️ Лайки ♻️", desc:"♻️ 30 дней\n💰 38₽/1к", price:38, pack:1000, speed:"⚡ 15 мин"},
+            {id:"1642", key:"vk_views", name:"👀 Просмотры", desc:"🌟 Лучшая цена\n💰 1₽/1к", price:1, pack:1000, speed:"⚡ 5 мин"}
+        ]}
+    };
+
+    let platGrid = document.getElementById('platforms-grid');
+    if(platGrid) {
+        platGrid.innerHTML = "";
+        for (let key in CATALOG) {
+            let p = CATALOG[key];
+            platGrid.innerHTML += `<div class="cat" onclick="openPlatform('${key}')"><i class="${p.icon}" style="color:${p.color}"></i><div class="cat-name">${p.title}</div><div class="cat-cnt">${p.items.length} услуг</div></div>`;
+        }
+    }
+
+    let currentItem = null;
+    function openPlatform(key) {
+        document.getElementById('platform-title').innerText = CATALOG[key].title;
+        let list = document.getElementById('services-list'); 
+        list.innerHTML = "<div class='skeleton'></div><div class='skeleton'></div><div class='skeleton'></div>";
+        setTimeout(() => {
+            list.innerHTML = "";
+            CATALOG[key].items.forEach((item, index) => {
+                list.innerHTML += `<div class="item" onclick="selectService('${key}', ${index})">
+                    <div style="flex:1;">
+                        <div class="item-name">${item.name}</div>
+                        <div style="font-size:10px; color:var(--accent); margin-top:2px;"><i class="fas fa-bolt"></i> ${item.speed}</div>
+                        <div class="item-desc">${item.desc}</div>
+                    </div>
+                    <div class="item-price">${item.price}₽</div>
+                </div>`;
+            });
+        }, 200);
+        navTo('screen-services');
+    }
+
+    function selectService(platKey, itemIndex) {
+        let item = CATALOG[platKey].items[itemIndex];
+        currentItem = {id:item.id, key:item.key, price:item.price, pack:item.pack, name:item.name, plat:platKey, speed: item.speed};
+        document.getElementById('checkout-title').innerText = item.name;
+        document.getElementById('checkout-desc').innerText = item.desc;
+        document.getElementById('order-qty').value = 100;
+        updateTotal();
+        navTo('screen-checkout');
+    }
+
+    function changeQty(amount) {
+        let input = document.getElementById('order-qty');
+        let newVal = parseInt(input.value || 0) + amount;
+        if (newVal < 25) newVal = 25;
+        input.value = newVal;
+        updateTotal();
+    }
+
+    function updateTotal() {
+        if (!currentItem) return;
+        let qty = parseInt(document.getElementById('order-qty').value) || 25;
+        let finalTotal = (currentItem.price / currentItem.pack) * qty;
+        document.getElementById('checkout-total').innerText = finalTotal.toFixed(2) + ' ₽';
+    }
+
+    function submitOrder() {
+        let link = document.getElementById('order-link').value.trim();
+        let qty = parseInt(document.getElementById('order-qty').value);
+        let finalTotal = (currentItem.price / currentItem.pack) * qty;
+        if (link.length < 3) return tg.showAlert("Введите ссылку!");
+        if (userBalance < finalTotal) return tg.showAlert("Недостаточно средств!");
+        
+        document.getElementById('order-progress').style.display = 'block';
+        let pBar = document.getElementById('order-progress-bar');
+        let pText = document.getElementById('order-progress-text');
+        let width = 0;
+        let interval = setInterval(() => {
+            if (width >= 100) {
+                clearInterval(interval);
+                fireRocket(); fireConfetti();
+                setTimeout(() => { 
+                    sendToBot({ action:"order", service: currentItem.key, plat: currentItem.plat, name: currentItem.name, link: link, qty: qty, price: finalTotal.toFixed(2) }); 
+                }, 500);
+            } else { width += 10; pBar.style.width = width + '%'; pText.innerText = width + '%'; }
+        }, 80);
+    }
+</script>
+<script>
+    const BUNDLES = {
+        "tg_start": { name: "🚀 TG Старт", desc: "500 подписчиков + 5000 просмотров", price: 103.49, oldPrice: 114.99, category: "telegram", discount: 10 },
+        "tg_boost": { name: "💫 TG Boost", desc: "1000 подписчиков + 10000 просмотров + 500 реакций", price: 225.12, oldPrice: 264.85, category: "telegram", discount: 15 },
+        "tt_start": { name: "🚀 TikTok Старт", desc: "1000 просмотров + 500 лайков", price: 193.49, oldPrice: 214.99, category: "tiktok", discount: 10 },
+        "ig_start": { name: "🚀 Instagram Старт", desc: "500 подписчиков + 1000 лайков", price: 276.75, oldPrice: 307.5, category: "instagram", discount: 10 },
+        "mini_boost": { name: "⚡ Мини-буст", desc: "TG 500 подписчиков + TikTok 1000 лайков", price: 384.99, oldPrice: 437.49, category: "universal", discount: 12 }
+    };
+
+    function renderBundleFilters() {
+        let filters = document.getElementById('bundle-filters');
+        if(!filters) return;
+        filters.innerHTML = `<button class="btn btn-sec btn-sm" id="f-all" onclick="filterBundles('all')">Все</button>`;
+        filters.innerHTML += `<button class="btn btn-sec btn-sm" id="f-telegram" onclick="filterBundles('telegram')">Telegram</button>`;
+        filters.innerHTML += `<button class="btn btn-sec btn-sm" id="f-tiktok" onclick="filterBundles('tiktok')">TikTok</button>`;
+        filters.innerHTML += `<button class="btn btn-sec btn-sm" id="f-instagram" onclick="filterBundles('instagram')">Instagram</button>`;
+        filters.innerHTML += `<button class="btn btn-sec btn-sm" id="f-universal" onclick="filterBundles('universal')">Универсальные</button>`;
+        filterBundles('all');
+    }
+
+    function filterBundles(category) {
+        document.querySelectorAll('#bundle-filters button').forEach(b => b.style.background = '');
+        let activeBtn = document.getElementById('f-' + category);
+        if (activeBtn) activeBtn.style.background = 'var(--accent)';
+        let list = document.getElementById('bundles-list'); 
+        if(!list) return;
+        list.innerHTML = "<div class='skeleton'></div><div class='skeleton'></div>";
+        setTimeout(() => {
+            list.innerHTML = "";
+            let found = false;
+            for (let key in BUNDLES) {
+                let b = BUNDLES[key];
+                if (category === 'all' || b.category === category) {
+                    found = true;
+                    list.innerHTML += `<div class="bundle-card" onclick="openBundleCheckout('${key}')">
+                        <div class="bundle-badge">-${b.discount}%</div>
+                        <div class="bundle-title">${b.name}</div>
+                        <div class="bundle-desc">${b.desc}</div>
+                        <div class="bundle-price">${b.price} ₽ <span class="bundle-old-price">${b.oldPrice} ₽</span></div>
+                    </div>`;
+                }
+            }
+            if (!found) list.innerHTML = "<p style='text-align:center; color:var(--hint);'>Пакетов пока нет</p>";
+        }, 200);
+    }
+
+    let currentBundle = null;
+    function openBundleCheckout(key) {
+        currentBundle = key;
+        let b = BUNDLES[key];
+        document.getElementById('bundle-title').innerText = b.name;
+        document.getElementById('bundle-desc').innerText = b.desc;
+        document.getElementById('bundle-total').innerText = b.price + " ₽";
+        navTo('screen-bundle-checkout');
+    }
+
+    function submitBundle() {
+        let link = document.getElementById('bundle-link').value.trim();
+        if (link.length < 3) return tg.showAlert("Введите ссылку!");
+        if (userBalance < BUNDLES[currentBundle].price) return tg.showAlert("Недостаточно средств!");
+        fireRocket(); fireConfetti();
+        setTimeout(() => { sendToBot({ action: "order_bundle", bundle_key: currentBundle, link: link }); }, 700);
+    }
+
+    // Игры
+    const GAMES = {
+        pubg: { title: "PUBG Mobile", icon: "fas fa-crosshairs", color: "#ff9f43", items: [{name:"60 UC", price:112}, {name:"325 UC", price:478}] },
+        brawl: { title: "Brawl Stars", icon: "fas fa-star", color: "#ffd700", items: [{name:"Black Pass", price:1194}, {name:"Brawl Pass Plus", price:1574}] },
+        roblox: { title: "Roblox", icon: "fas fa-cube", color: "#ff0000", items: [{name:"80 Robux", price:127}, {name:"500 Robux", price:763}]}
+    };
+
+    let gameGrid = document.getElementById('games-grid');
+    if(gameGrid) {
+        gameGrid.innerHTML = "";
+        for (let key in GAMES) {
+            let g = GAMES[key];
+            gameGrid.innerHTML += `<div class="cat" onclick="openGame('${key}')"><i class="${g.icon}" style="color:${g.color}"></i><div class="cat-name">${g.title}</div></div>`;
+        }
+    }
+
+    function openGame(key) {
+        let g = GAMES[key];
+        document.getElementById('platform-title').innerText = g.title;
+        let list = document.getElementById('services-list'); 
+        list.innerHTML = "";
+        g.items.forEach(item => {
+            list.innerHTML += `<div class="item" onclick="tg.showAlert('Напишите @ismaboy014 для покупки: ${item.name}')">
+                <div class="item-name">${item.name}</div><div class="item-price">${item.price}₽</div>
+            </div>`;
+        });
+        navTo('screen-services');
+    }
+
+    // Корзина
+    let cart = [];
+    function addToCart() {
+        let link = document.getElementById('order-link').value.trim();
+        let qty = parseInt(document.getElementById('order-qty').value);
+        if (link.length < 3) return tg.showAlert("Введите ссылку!");
+        let finalTotal = (currentItem.price / currentItem.pack) * qty;
+        cart.push({ key: currentItem.key, plat: currentItem.plat, name: currentItem.name, price: currentItem.price, pack: currentItem.pack, qty: qty, link: link, finalTotal: finalTotal });
+        updateCartUI();
+        tg.showAlert("✅ Добавлено в корзину!");
+    }
+
+    function updateCartUI() {
+        let badge = document.getElementById('cart-badge-settings');
+        if (cart.length > 0) { if(badge) { badge.style.display = 'inline-block'; badge.innerText = cart.length; } } 
+        else { if(badge) badge.style.display = 'none'; }
+        
+        let list = document.getElementById('cart-list'); 
+        if(!list) return;
+        list.innerHTML = "";
+        let total = 0;
+        if (cart.length === 0) {
+            list.innerHTML = "<p style='text-align:center; color:var(--hint); margin-top:50px;'>Корзина пуста</p>";
+            document.getElementById('cart-summary').style.display = 'none';
+        } else {
+            document.getElementById('cart-summary').style.display = 'block';
+            cart.forEach((item, i) => {
+                let cost = item.finalTotal; total += cost;
+                list.innerHTML += `<div class="card" style="padding:12px; display:flex; justify-content:space-between; align-items:center;">
+                    <div><div style="font-weight:bold;">${item.name}</div><div style="font-size:11px; color:var(--hint);">${item.qty} шт</div></div>
+                    <div style="text-align:right;"><b style="color:var(--accent);">${cost.toFixed(2)} ₽</b><br><button onclick="cart.splice(${i},1); updateCartUI();" style="background:none; border:none; color:var(--error); font-size:12px; margin-top:5px;">Удалить</button></div>
+                </div>`;
+            });
+            document.getElementById('cart-total-price').innerText = total.toFixed(2) + ' ₽';
+        }
+    }
+
+    function checkoutCart() {
+        if (cart.length === 0) return;
+        let total = 0; cart.forEach(item => total += item.finalTotal);
+        if (userBalance < total) return tg.showAlert("Недостаточно средств!");
+        fireRocket(); fireConfetti();
+        setTimeout(() => { sendToBot({ action: "order_cart", cart: cart, total: total.toFixed(2) }); }, 700);
+    }
+
+    // Рулетки с Джекпотами из ТЗ
+    let currentWheelMode = 150;
+    const WHEEL_CONFIG = {
+        150: { 
+            price: 150, 
+            jackpotText: "💎 ДЖЕКПОТ: 100 ЗВЁЗД М ТД",
+            prizes: ["💀 Пусто", "👀 1000 TT", "❤️ 100 IG", "👀 5000 IG", "❤️ 500 TT", "💾 500 TT", "🔁 500 TT", "👀 5000 YT", "👀 5000 VK", "👀 5000 RT", "👥 500 TG", "👀 10000 TG", "🚀 5000 Бот", "🚀 500 Реак", "❤️ 500 YT", "👥 500 TT", "📊 5000 IG", "🌟 100 Звёзд", "👑 1000 TG", "💎 ДЖЕКПОТ 100 ЗВЁЗД"] 
+        },
+        49: { 
+            price: 49, 
+            jackpotText: "💎 ДЖЕКПОТ: 25000 ПРОСМОТРОВ ИНСТА",
+            prizes: ["💀 Пусто", "👀 1000 TT", "❤️ 100 IG", "👀 3000 IG", "❤️ 300 TT", "💾 300 TT", "🔁 300 TT", "👀 3000 YT", "👀 3000 VK", "👀 3000 RT", "👥 300 TG", "👀 5000 TG", "🚀 3000 Бот", "🚀 300 Реак", "❤️ 300 YT", "👥 300 TT", "📊 3000 IG", "🌟 50 Звёзд", "👑 500 TG", "💎 ДЖЕКПОТ 25000 ПРОСМОТРОВ"] 
+        }
+    };
+    const WHEEL_COLORS = ["#b829ff", "#4a00e0", "#7b1fa2", "#2d1b4e", "#8a2be2", "#6a1b9a", "#4a148c", "#9c27b0", "#673ab7", "#512da8"];
+
+    function switchWheel(mode) {
+        currentWheelMode = mode;
+        document.getElementById('wheel-tab-150').classList.remove('active');
+        document.getElementById('wheel-tab-49').classList.remove('active');
+        document.getElementById('wheel-tab-' + mode).classList.add('active');
+        document.getElementById('spin-btn').innerHTML = `<i class="fas fa-dharmachakra"></i> Крутить за ${mode} ₽`;
+        
+        document.getElementById('wheel-jackpot-text').innerText = WHEEL_CONFIG[mode].jackpotText;
+
+        const sectorsGroup = document.getElementById('wheel-sectors');
+        if(!sectorsGroup) return;
+        sectorsGroup.innerHTML = "";
+        let prizes = WHEEL_CONFIG[mode].prizes;
+        let numSectors = prizes.length;
+        let anglePerSector = 360 / numSectors;
+        
+        function polarToCartesian(cx, cy, r, angleDeg) { 
+            const angleRad = (angleDeg - 90) * Math.PI / 180; 
+            return { x: cx + r * Math.cos(angleRad), y: cy + r * Math.sin(angleRad) }; 
+        }
+        function describeArc(cx, cy, r, startAngle, endAngle) { 
+            const start = polarToCartesian(cx, cy, r, endAngle); 
+            const end = polarToCartesian(cx, cy, r, startAngle); 
+            const largeArc = endAngle - startAngle <= 180 ? "0" : "1"; 
+            return `M ${cx} ${cy} L ${start.x} ${start.y} A ${r} ${r} 0 ${largeArc} 0 ${end.x} ${end.y} Z`; 
+        }
+        
+        for (let i = 0; i < numSectors; i++) {
+            const startAngle = i * anglePerSector; const endAngle = (i + 1) * anglePerSector;
+            const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            path.setAttribute("d", describeArc(200, 200, 185, startAngle, endAngle));
+            path.setAttribute("fill", WHEEL_COLORS[i % WHEEL_COLORS.length]);
+            path.setAttribute("stroke", "#0a0014"); path.setAttribute("stroke-width", "2");
+            sectorsGroup.appendChild(path);
+            
+            const midAngle = startAngle + anglePerSector / 2;
+            const textPos = polarToCartesian(200, 200, 125, midAngle);
+            const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            text.setAttribute("x", textPos.x); text.setAttribute("y", textPos.y);
+            text.setAttribute("text-anchor", "middle"); text.setAttribute("dominant-baseline", "middle");
+            text.setAttribute("font-size", "9"); text.setAttribute("font-weight", "bold");
+            text.setAttribute("fill", "#fff");
+            text.setAttribute("transform", `rotate(${midAngle}, ${textPos.x}, ${textPos.y})`);
+            text.textContent = prizes[i]; 
+            sectorsGroup.appendChild(text);
+        }
+    }
+
+    let wheelDeg = 0; let isSpinning = false; let currentWheelPrize = "";
+    function spinWheel() {
+        if (isSpinning) return;
+        let price = WHEEL_CONFIG[currentWheelMode].price;
+        if (userBalance < price) return tg.showAlert(`Недостаточно средств! Прокрут стоит ${price} ₽.`);
+        userBalance -= price;
+        document.getElementById('main-balance').innerText = userBalance.toFixed(2) + ' ₽';
+        isSpinning = true; document.getElementById('wheel-text').innerText = "Крутим... 🎲";
+        document.getElementById('wheel-prize-block').style.display = 'none';
+        
+        let prizes = WHEEL_CONFIG[currentWheelMode].prizes;
+        const winIndex = Math.floor(Math.random() * prizes.length);
+        currentWheelPrize = prizes[winIndex];
+        const midAngle = winIndex * (360 / prizes.length) + (360 / prizes.length) / 2;
+        const totalRotation = 360 * 6 + (360 - midAngle);
+        wheelDeg += totalRotation;
+        document.getElementById('wheel-wrapper').style.transform = `rotate(${wheelDeg}deg)`;
+        
+        setTimeout(() => {
+            isSpinning = false;
+            if (currentWheelPrize.includes("Пусто")) {
+                document.getElementById('wheel-text').innerText = "💀 Пусто... Повезет в следующий раз!";
+                sendToBot({action:"blindbox", link: "empty", price: price});
+            } else {
+                document.getElementById('wheel-text').innerText = `🎁 Вы выиграли: ${currentWheelPrize}`;
+                document.getElementById('wheel-prize-block').style.display = 'block';
+                fireConfetti();
+            }
+        }, 5200);
+    }
+
+    function activatePrize() {
+        let link = document.getElementById('wheel-prize-link').value.trim();
+        if (link.length < 3) return tg.showAlert("Пожалуйста, введите ссылку!");
+        fireRocket(); fireConfetti();
+        setTimeout(() => { sendToBot({action:"blindbox", link: link, prize: currentWheelPrize, price: WHEEL_CONFIG[currentWheelMode].price}); }, 700);
+    }
+
+    function loadReviews() {
+        const container = document.getElementById('reviews-list'); if(!container) return;
+        let mockReviews = [ { text: "Круто! Заказал просмотры, пришли быстро. Спасибо!", stars: 5, image: "https://i.imgur.com/8QO9y8f.jpeg" } ];
+        container.innerHTML = "";
+        mockReviews.forEach(r => {
+            container.innerHTML += `<div style="border-bottom:1px solid var(--border); padding-bottom:10px; margin-bottom:10px;">
+                <div style="color:var(--success); margin-bottom:5px;">${'⭐'.repeat(r.stars)}</div>
+                <p style="font-size:13px; margin:0 0 10px;">${r.text}</p>
+                <div style="width:100%; height:150px; background:#333; border-radius:10px; overflow:hidden;">
+                    <img src="${r.image}" style="width:100%; height:100%; object-fit:cover;">
+                </div>
+            </div>`;
+        });
+    }
+
+    let taps = parseInt(localStorage.getItem('isma_taps') || 0);
+    function updateTapUI() { let scoreEl = document.getElementById('tap-score'); if (scoreEl) scoreEl.innerText = taps; }
+    updateTapUI();
+    function doTap() {
+        taps++; localStorage.setItem('isma_taps', taps); updateTapUI();
+        if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+        let coin = document.getElementById('tap-coin');
+        if (coin) { coin.style.transform = 'scale(0.9)'; setTimeout(() => coin.style.transform = 'scale(1)', 50); }
+    }
+
+    function startQuiz() { navTo('screen-quiz'); document.getElementById('quiz-content').innerHTML = `<h3>Умный ИИ-подбор</h3><p style="color:var(--hint);">Перейдите в раздел пакетов для быстрого заказа.</p><button class="btn btn-success" onclick="navTo('tab-bundles')">К пакетам</button>`; }
+
+    // Финальная инициализация
+    window.addEventListener('DOMContentLoaded', () => {
+        renderBundleFilters();
+        switchWheel(150);
+        updateCartUI();
+    });
+</script>
+</html>
